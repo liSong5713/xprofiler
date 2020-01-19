@@ -7,6 +7,10 @@
 #include "../../configure.h"
 #include "../../logger.h"
 
+#if defined(__linux__)
+#define UNIX_PATH_MAX 512
+#
+
 namespace xprofiler {
 using std::string;
 static struct sockaddr_un server_addr;
@@ -38,6 +42,8 @@ void CreateIpcServer(void (*parsecmd)(char *)) {
   // set server addr
   server_addr.sun_family = AF_UNIX;
   unlink(filename.c_str());
+  printf("server_addr.sun_path length: %lu(%lu)\n", sizeof server_addr.sun_path,
+         filename.length());
   strcpy(server_addr.sun_path, filename.c_str());
 
   // bind fd
