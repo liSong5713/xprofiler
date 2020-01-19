@@ -16,20 +16,25 @@ using Nan::New;
 using Nan::ThrowTypeError;
 using Nan::To;
 using Nan::Utf8String;
+using std::exception;
 using std::string;
 using std::to_string;
 using v8::Local;
 using v8::String;
 
-#define WRITET_TO_FILE(type)                                               \
-  uv_mutex_lock(&logger_mutex);                                            \
-  type##_stream.open(filepath, std::ios::app);                             \
-  if (!type##_stream.fail()) {                                             \
-    type##_stream << log;                                                  \
-    type##_stream.close();                                                 \
-  } else {                                                                 \
-    printf("open file %s error: %s\n", filepath.c_str(), strerror(errno)); \
-  }                                                                        \
+#define WRITET_TO_FILE(type)                                                 \
+  uv_mutex_lock(&logger_mutex);                                              \
+  try {                                                                      \
+    type##_stream.open(filepath, std::ios::app);                             \
+    if (!type##_stream.fail()) {                                             \
+      type##_stream << log;                                                  \
+      type##_stream.close();                                                 \
+    } else {                                                                 \
+      printf("open file %s error: %s\n", filepath.c_str(), strerror(errno)); \
+    }                                                                        \
+  } catch (exception & e) {                                                  \
+    printf("write to log file failed: %s\n", e.what());                      \
+  }                                                                          \
   uv_mutex_unlock(&logger_mutex);
 
 #define LOG_WITH_LEVEL(level)                    \
