@@ -11,8 +11,6 @@
 #include "configure.h"
 #include "platform/platform.h"
 
-#include <limits.h>
-
 namespace xprofiler {
 using Nan::New;
 using Nan::ThrowTypeError;
@@ -24,20 +22,22 @@ using std::to_string;
 using v8::Local;
 using v8::String;
 
-#define WRITET_TO_FILE(type)                                                   \
-  uv_mutex_lock(&logger_mutex);                                                \
-  printf("======== filepath length: %lu (%d)\n", filepath.length(), NAME_MAX); \
-  try {                                                                        \
-    type##_stream.open(filepath, std::ios::app);                               \
-    if (!type##_stream.fail()) {                                               \
-      type##_stream << log;                                                    \
-      type##_stream.close();                                                   \
-    } else {                                                                   \
-      printf("open file %s error: %s\n", filepath.c_str(), strerror(errno));   \
-    }                                                                          \
-  } catch (exception & e) {                                                    \
-    printf("write to log file failed: %s\n", e.what());                        \
-  }                                                                            \
+#define WRITET_TO_FILE(type)                                                 \
+  uv_mutex_lock(&logger_mutex);                                              \
+  try {                                                                      \
+    type##_stream.open(filepath, std::ios::app);                             \
+    if (!type##_stream.fail() || !type##_stream.bad()) {                     \
+      string tmp = log;                                                      \
+      printf("======== filepath length: %lu(%lu)\n", filepath.length(),      \
+             tmp.length());                                                  \
+      type##_stream << tmp;                                                  \
+      type##_stream.close();                                                 \
+    } else {                                                                 \
+      printf("open file %s error: %s\n", filepath.c_str(), strerror(errno)); \
+    }                                                                        \
+  } catch (exception & e) {                                                  \
+    printf("write to log file failed: %s\n", e.what());                      \
+  }                                                                          \
   uv_mutex_unlock(&logger_mutex);
 
 #define LOG_WITH_LEVEL(level)                    \
