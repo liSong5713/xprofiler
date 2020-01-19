@@ -21,11 +21,15 @@ using std::to_string;
 using v8::Local;
 using v8::String;
 
-#define WRITET_TO_FILE(type)                   \
-  uv_mutex_lock(&logger_mutex);                \
-  type##_stream.open(filepath, std::ios::app); \
-  type##_stream << log;                        \
-  type##_stream.close();                       \
+#define WRITET_TO_FILE(type)                                               \
+  uv_mutex_lock(&logger_mutex);                                            \
+  type##_stream.open(filepath, std::ios::app);                             \
+  if (!type##_stream.fail()) {                                             \
+    type##_stream << log;                                                  \
+    type##_stream.close();                                                 \
+  } else {                                                                 \
+    printf("open file %s error: %s\n", filepath.c_str(), strerror(errno)); \
+  }                                                                        \
   uv_mutex_unlock(&logger_mutex);
 
 #define LOG_WITH_LEVEL(level)                    \
@@ -46,8 +50,8 @@ using v8::String;
   Utf8String log_content(log_content_string);                                  \
   Log(LOG_LEVEL::level, *log_type, *log_content);
 
-static const int kMaxMessageLength = 4096;
-static const int kMaxFormatLength = 4096;
+static const int kMaxMessageLength = 2048;
+static const int kMaxFormatLength = 2048;
 
 static uv_mutex_t logger_mutex;
 
