@@ -22,15 +22,14 @@ function requestListenerWrapper(original, addLiveRequest, addCloseRequest, addSe
 function serverWrapper(addLiveRequest, addCloseRequest, addSentRequest, original) {
   return function (opts, requestListener) {
     const args = Array.from(arguments);
-    let returned;
 
-    if (typeof opts === 'function') {
-      args.splice(0, 1, requestListenerWrapper(opts, addLiveRequest, addCloseRequest, addSentRequest));
-    } else if (typeof requestListener === 'function') {
-      args.splice(1, 1, requestListenerWrapper(requestListener, addLiveRequest, addCloseRequest, addSentRequest));
-    }
+    // if (typeof opts === 'function') {
+    //   args.splice(0, 1, requestListenerWrapper(opts, addLiveRequest, addCloseRequest, addSentRequest));
+    // } else if (typeof requestListener === 'function') {
+    //   args.splice(1, 1, requestListenerWrapper(requestListener, addLiveRequest, addCloseRequest, addSentRequest));
+    // }
 
-    returned = original.apply(this, args);
+    const returned = original.apply(this, args);
 
     return returned;
   };
