@@ -10,14 +10,8 @@
 namespace xprofiler {
 using std::string;
 
-struct sockaddr_un2 {
-  unsigned char sun_len;  /* sockaddr len including null */
-  sa_family_t sun_family; /* [XSI] AF_UNIX */
-  char sun_path[512];     /* [XSI] path name (gag) */
-};
-
-static struct sockaddr_un2 server_addr;
-static struct sockaddr_un2 client_addr;
+static struct sockaddr_un server_addr;
+static struct sockaddr_un client_addr;
 
 static const char module_type[] = "ipc";
 
@@ -40,13 +34,20 @@ void CreateIpcServer(void (*parsecmd)(char *)) {
   // get domain socket file name
   string filename =
       GetLogDir() + "/xprofiler-uds-path-" + std::to_string(getpid()) + ".sock";
+
+  if (filename.length() > sizeof(server_addr.sun_path) - 1) {
+    Error(module_type,
+          "the length of <%s> is larger than sizeof(server_addr.sun_path) - 1 "
+          "(which is %lu).",
+          filename.c_str(), sizeof(server_addr.sun_path) - 1);
+    return;
+  }
+
   Debug(module_type, "unix domain socket file name: %s.", filename.c_str());
 
   // set server addr
   server_addr.sun_family = AF_UNIX;
   unlink(filename.c_str());
-  printf("server_addr.sun_path length: %lu(%lu)\n", sizeof server_addr.sun_path,
-         filename.length());
   strcpy(server_addr.sun_path, filename.c_str());
 
   // bind fd
@@ -113,6 +114,14 @@ void CreateIpcClient(char *message) {
   // set client addr
   client_addr.sun_family = AF_UNIX;
   std::string filename = GetLogDir() + "/" + XPROFILER_IPC_PATH;
+  if (filename.length() > sizeof(client_addr.sun_path) - 1) {
+    Error(module_type,
+          "the length of <%s> is larger than sizeof(client_addr.sun_path) - 1 "
+          "(which is %lu).",
+          filename.c_str(), sizeof(client_addr.sun_path) - 1);
+    return;
+  }
+
   strcpy(client_addr.sun_path, filename.c_str());
 
   // connect server

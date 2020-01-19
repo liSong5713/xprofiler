@@ -59,11 +59,11 @@ for (const testCase of cases) {
       let logContent;
       let pid;
       before(async function () {
-        console.log('\n\n<---- fork', target.file, Object.assign({}, testCase.env, target.env), '\n\n');
+        // console.log('\n\n<---- fork', target.file, Object.assign({}, testCase.env, target.env), '\n\n');
         const p = cp.fork(target.file, { env: Object.assign({}, testCase.env, target.env) });
         pid = p.pid;
         await new Promise(resolve => p.on('close', resolve));
-        console.log('\n\n---->\n\n');
+        // console.log('\n\n---->\n\n');
         logContent = fs.readFileSync(target.logfile, 'utf8');
       });
 

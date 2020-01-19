@@ -28,8 +28,6 @@ using v8::String;
     type##_stream.open(filepath, std::ios::app);                             \
     if (!type##_stream.fail() || !type##_stream.bad()) {                     \
       string tmp = log;                                                      \
-      printf("======== filepath length: %lu(%lu)\n", filepath.length(),      \
-             tmp.length());                                                  \
       type##_stream << tmp;                                                  \
       type##_stream.close();                                                 \
     } else {                                                                 \
