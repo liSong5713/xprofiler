@@ -9,7 +9,7 @@
 
 #if defined(__linux__)
 #define UNIX_PATH_MAX 512
-#
+#endif
 
 namespace xprofiler {
 using std::string;
