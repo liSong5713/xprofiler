@@ -24,6 +24,7 @@ using v8::String;
 
 #define WRITET_TO_FILE(type)                                                 \
   uv_mutex_lock(&logger_mutex);                                              \
+  printf("======== filepath length: %lu\n", filepath.length());              \
   try {                                                                      \
     type##_stream.open(filepath, std::ios::app);                             \
     if (!type##_stream.fail()) {                                             \
