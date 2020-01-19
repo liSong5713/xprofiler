@@ -7,14 +7,17 @@
 #include "../../configure.h"
 #include "../../logger.h"
 
-#if defined(__linux__)
-#define UNIX_PATH_MAX 512
-#endif
-
 namespace xprofiler {
 using std::string;
-static struct sockaddr_un server_addr;
-static struct sockaddr_un client_addr;
+
+struct sockaddr_un2 {
+  unsigned char sun_len;  /* sockaddr len including null */
+  sa_family_t sun_family; /* [XSI] AF_UNIX */
+  char sun_path[512];     /* [XSI] path name (gag) */
+};
+
+static struct sockaddr_un2 server_addr;
+static struct sockaddr_un2 client_addr;
 
 static const char module_type[] = "ipc";
 
