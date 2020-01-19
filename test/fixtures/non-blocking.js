@@ -5,23 +5,43 @@ const os = require('os');
 const http = require('http');
 const xprofiler = require('../../');
 
+console.log('\n\n------- 1 -------\n\n');
 if (process.env.XPROFILER_UNIT_TEST_TMP_HOMEDIR) {
   mm(os, 'homedir', () => process.env.XPROFILER_UNIT_TEST_TMP_HOMEDIR);
 }
+console.log('\n\n------- 2 -------\n\n');
 
 xprofiler();
 
+console.log('\n\n------- 3 -------\n\n');
+
 // start log bypass
 xprofiler.runLogBypass();
+
+console.log('\n\n------- 4 -------\n\n');
+
 xprofiler.runLogBypass();
+
+console.log('\n\n------- 5 -------\n\n');
 
 // start commands listener
 xprofiler.runCommandsListener();
+
+console.log('\n\n------- 6 -------\n\n');
+
 xprofiler.runCommandsListener();
+
+
+console.log('\n\n------- 7 -------\n\n');
 
 // set v8 hooks
 xprofiler.setHooks();
+
+console.log('\n\n------- 8 -------\n\n');
+
 xprofiler.setHooks();
+
+console.log('\n\n------- 9 -------\n\n');
 
 // http server
 // const server = http.createServer(function (req, res) {
@@ -58,7 +78,7 @@ setTimeout(() => {
   // clearInterval(interval);
   console.log('will close...');
   setTimeout(() => {
-    server.close();
+    // server.close();
     console.log('closed');
   }, 200);
 }, 8000);
