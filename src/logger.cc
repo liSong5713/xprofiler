@@ -21,11 +21,11 @@ using std::to_string;
 using v8::Local;
 using v8::String;
 
-#define WRITET_TO_FILE(type)                   \
-  uv_mutex_lock(&logger_mutex);                \
-  type##_stream.open(filepath, std::ios::app); \
-  type##_stream << log;                        \
-  type##_stream.close();                       \
+#define WRITET_TO_FILE(type)                    \
+  uv_mutex_lock(&logger_mutex);                 \
+  type##_stream.open(filepathc, std::ios::app); \
+  type##_stream << log;                         \
+  type##_stream.close();                        \
   uv_mutex_unlock(&logger_mutex);
 
 #define LOG_WITH_LEVEL(level)                    \
@@ -72,18 +72,25 @@ static void WriteToFile(const LOG_LEVEL output_level, char *log) {
     file_prefix = "node-";
   }
   switch (output_level) {
-    case LOG_LEVEL::LOG_INFO:
+    case LOG_LEVEL::LOG_INFO: {
       filepath += file_prefix + time_string_day + ".log";
+      const char *filepathc = filepath.c_str();
       WRITET_TO_FILE(info)
       break;
-    case LOG_LEVEL::LOG_ERROR:
+    }
+    case LOG_LEVEL::LOG_ERROR: {
       filepath += file_prefix + "error-" + time_string_day + ".log";
+      const char *filepathc = filepath.c_str();
       WRITET_TO_FILE(error)
       break;
-    case LOG_LEVEL::LOG_DEBUG:
+    }
+    case LOG_LEVEL::LOG_DEBUG: {
       filepath += file_prefix + "debug-" + time_string_day + ".log";
+      const char *filepathc = filepath.c_str();
       WRITET_TO_FILE(debug)
       break;
+    }
+
     default:
       break;
   }
