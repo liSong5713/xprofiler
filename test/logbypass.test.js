@@ -11,7 +11,7 @@ const getTestCases = require('./fixtures/logbypass.test');
 const logdirBlockingForHttp = utils.createLogDir('log_bypass_blocking_http');
 const logdirNonBlockingForHttp = utils.createLogDir('log_bypass_non_blocking_http');
 let cases = getTestCases('performance log correctly  XPROFILER_PATCH_HTTP=YES',
-  logdirBlockingForHttp, logdirNonBlockingForHttp, { XPROFILER_PATCH_HTTP: 'YES' },
+  logdirBlockingForHttp, logdirNonBlockingForHttp, { XPROFILER_PATCH_HTTP: 'NO' },
   {
     http: {
       live_http_request: /^\d+$/,
