@@ -95,7 +95,7 @@ function getTestCases(title, logdirBlocking, logdirNonBlocking, envConfig, struc
   const date = moment().format('YYYYMMDD');
 
   // common env
-  const commonEnvConfig = Object.assign({}, process.env, {
+  const commonEnvConfig = Object.assign({}, /* process.env, */ {
     XPROFILER_LOG_INTERVAL: 1
   });
 
