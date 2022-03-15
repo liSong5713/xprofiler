@@ -93,12 +93,12 @@ void LogByPass::CollectStatistics() {
 void RunLogBypass(const FunctionCallbackInfo<Value>& info) {
   // init gc hooks
   InitGcStatusHooks();
-  Info("init", "logbypass: gc hooks setted.");
+  Debug("init", "logbypass: gc hooks setted.");
 
   // init log thread
   ProcessData::Get()->log_by_pass = std::unique_ptr<LogByPass>(new LogByPass());
   ProcessData::Get()->log_by_pass->StartIfNeeded();
-  Info("init", "logbypass: log thread created.");
+  Debug("init", "logbypass: log thread created.");
 
   info.GetReturnValue().Set(True());
 }

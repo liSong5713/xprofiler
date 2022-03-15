@@ -28,7 +28,7 @@ void RunCommandsListener(const FunctionCallbackInfo<Value>& info) {
     info.GetReturnValue().Set(False());
     return;
   }
-  Info("init", "commands listener: listener thread created.");
+  Debug("init", "commands listener: listener thread created.");
 
   info.GetReturnValue().Set(True());
 }
