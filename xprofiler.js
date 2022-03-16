@@ -6,7 +6,7 @@ const clean = require('./lib/clean');
 const { patch } = require('./patch');
 const configure = require('./lib/configure');
 const configList = require('./xprofiler.json');
-const moment = require('moment');
+const dayjs = require('dayjs');
 const pkg = require('./package.json');
 const workerThreads = require('./lib/worker_threads');
 
@@ -38,11 +38,11 @@ function checkSocketPath(finalConfig) {
   const passed = xprofiler.checkSocketPath(true);
   if (!passed) {
     const message = 'socket path is too long, complete log of this error can be found in:\n'
-      + `  ${path.join(finalConfig.log_dir, `xprofiler-error-${moment().format('YYYYMMDD')}.log`)}\n`;
+      + `  ${path.join(finalConfig.log_dir, `xprofiler-error-${dayjs().format('YYYYMMDD')}.log`)}\n`;
     if (finalConfig.check_throw) {
       throw new Error(message);
     }
-    console.error(`\n[${moment().format('YYYY-MM-DD HH:mm:ss')}] [error] [xprofiler-ipc] [${pkg.version}] ${message}`);
+    console.error(`\n[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] [error] [xprofiler-ipc] [${pkg.version}] ${message}`);
     return;
   }
 

@@ -76,7 +76,7 @@ void WriteCpuUsageInPeriod(bool log_format_alinode) {
     Info("other",
 #undef EXTRA_SYMBOL
 #define EXTRA_SYMBOL ", "
-         "cpu_usage(%%) now: %.2lf, " PERIOD_LIST(ALINODE_LOG_KEY),
+         "now: %.2lf, " PERIOD_LIST(ALINODE_LOG_KEY),
 #undef EXTRA_SYMBOL
 #define EXTRA_SYMBOL ,
          cpu_now, PERIOD_LIST(CPU_AVERAGE_VAL));
@@ -84,7 +84,7 @@ void WriteCpuUsageInPeriod(bool log_format_alinode) {
     Info("cpu",
 #undef EXTRA_SYMBOL
 #define EXTRA_SYMBOL ", "
-         "cpu_usage(%%) cpu_now: %lf, " PERIOD_LIST(XPROFILER_LOG_KEY),
+         "cpu_now: %lf, " PERIOD_LIST(XPROFILER_LOG_KEY),
 #undef EXTRA_SYMBOL
 #define EXTRA_SYMBOL ,
          cpu_now, PERIOD_LIST(CPU_AVERAGE_VAL));

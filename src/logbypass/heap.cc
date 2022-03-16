@@ -22,7 +22,7 @@ using v8::Isolate;
   "malloced_memory: %zu, "     \
   "amount_of_external_allocated_memory: %zu, "
 
-#define COMMON_INFO_FORMATTERX "memory_usage(byte) " COMMON_INFO_FORMATTER
+#define COMMON_INFO_FORMATTERX  COMMON_INFO_FORMATTER
 
 #define SPACE_INFO_FORMATTER(name)                            \
 #name "_space_size: %zu, " #name "_space_used: %zu, " #name \

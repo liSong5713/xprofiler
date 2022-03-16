@@ -57,7 +57,7 @@
   "homepage": "https://github.com/X-Profiler/xprofiler#readme",
   "dependencies": {
     "@xprofiler/node-pre-gyp": "^1.0.9",
-    "moment": "^2.29.1",
+    "dayjs": "^1.11.0",
     "nan": "^2.15.0",
     "uuid": "^8.3.2",
     "yargs": "^15.4.1"
