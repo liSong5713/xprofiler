@@ -1,5 +1,5 @@
 {
-  "name": "xprofiler",
+  "name": "@te-one/xprofiler",
   "version": "1.3.1",
   "description": "node.js addon to output runtime logs",
   "bin": {
@@ -14,7 +14,7 @@
     "host": "https://github.com/X-Profiler/xprofiler/releases/download"
   },
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
+    "install": "node-pre-gyp rebuild",
     "package": "node scripts/build.js",
     "pack-common": "node scripts/common.js",
     "pack-6u": "node scripts/6u.js",
@@ -57,7 +57,7 @@
   "homepage": "https://github.com/X-Profiler/xprofiler#readme",
   "dependencies": {
     "@xprofiler/node-pre-gyp": "^1.0.9",
-    "dayjs": "^1.11.0",
+    "dayjs": "^1.10.8",
     "nan": "^2.15.0",
     "uuid": "^8.3.2",
     "yargs": "^15.4.1"
@@ -79,6 +79,9 @@
   "xctlIpcPath": {
     "unix": "xprofiler-ctl-uds-path.sock",
     "win32": "xprofiler-ctl"
+  },
+  "publishConfig": {
+    "registry": "http://nexus.17usoft.com/repository/npm-fe/"
   },
   "blurryTag": "__"
 }
