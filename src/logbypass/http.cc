@@ -94,11 +94,11 @@ void WriteHttpStatus(EnvironmentData* env_data, bool log_format_alinode,
 
     Info("http",
          "%s"
-         "live_http_request: %d, "
-         "http_response_close: %d, "
-         "http_response_sent: %d, "
-         "http_request_timeout: %d, "
-         "http_patch_timeout: %d, "
+         "live_http_request: %d\t"
+         "http_response_close: %d\t"
+         "http_response_sent: %d\t"
+         "http_request_timeout: %d\t"
+         "http_patch_timeout: %d\t"
          "http_rt: %.2lf",
          format.c_str(), http_statistics->live_http_request,
          http_statistics->http_response_close,

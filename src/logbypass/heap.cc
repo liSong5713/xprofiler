@@ -12,21 +12,21 @@ using v8::HeapSpaceStatistics;
 using v8::Isolate;
 
 #define COMMON_INFO_FORMATTER  \
-  "rss: %zu, "                 \
-  "heap_used: %zu, "           \
-  "heap_available: %zu, "      \
-  "heap_total: %zu, "          \
-  "heap_limit: %zu, "          \
-  "heap_executeable: %zu, "    \
-  "total_physical_size: %zu, " \
-  "malloced_memory: %zu, "     \
-  "amount_of_external_allocated_memory: %zu, "
+  "rss: %zu\t"                 \
+  "heap_used: %zu\t"           \
+  "heap_available: %zu\t"      \
+  "heap_total: %zu\t"          \
+  "heap_limit: %zu\t"          \
+  "heap_executeable: %zu\t"    \
+  "total_physical_size: %zu\t" \
+  "malloced_memory: %zu\t"     \
+  "amount_of_external_allocated_memory: %zu\t"
 
-#define COMMON_INFO_FORMATTERX  COMMON_INFO_FORMATTER
+#define COMMON_INFO_FORMATTERX COMMON_INFO_FORMATTER
 
 #define SPACE_INFO_FORMATTER(name)                            \
-#name "_space_size: %zu, " #name "_space_used: %zu, " #name \
-        "_space_available: %zu, " #name "_space_committed: %zu, "
+#name "_space_size: %zu\t" #name "_space_used: %zu\t" #name \
+        "_space_available: %zu\t" #name "_space_committed: %zu\t"
 
 #define LOG_SPACE_INFO(name)                         \
   heap_space_statistics->name##_space_size,          \
@@ -91,46 +91,25 @@ void WriteMemoryInfoToLog(EnvironmentData* env_data, bool log_format_alinode) {
   XprofilerHeapSpaceStatistics* heap_space_statistics =
       &memory_statistics->heap_space_statistics;
 
-  if (log_format_alinode) {
-    Info("heap",
-         COMMON_INFO_FORMATTER SPACE_INFO_FORMATTER(new) SPACE_INFO_FORMATTER(
-             old) SPACE_INFO_FORMATTER(code) SPACE_INFO_FORMATTER(map)
-             SPACE_INFO_FORMATTER(lo) SPACE_INFO_FORMATTER(read_only)
-                 SPACE_INFO_FORMATTER(new_lo) SPACE_INFO_FORMATTER(code_lo),
-         // rss
-         rss,
-         // heap statistics
-         heap_statistics->used_heap_size(),
-         heap_statistics->total_available_size(),
-         heap_statistics->total_heap_size(), heap_statistics->heap_size_limit(),
-         heap_statistics->total_heap_size_executable(),
-         heap_statistics->total_physical_size(),
-         heap_statistics->malloced_memory(), heap_statistics->external_memory(),
-         // space statistics
-         LOG_SPACE_INFO(new), LOG_SPACE_INFO(old), LOG_SPACE_INFO(code),
-         LOG_SPACE_INFO(map), LOG_SPACE_INFO(large_object),
-         LOG_SPACE_INFO(read_only), LOG_SPACE_INFO(new_large_object),
-         LOG_SPACE_INFO(code_large_object));
-  } else {
-    Info("memory",
-         COMMON_INFO_FORMATTERX SPACE_INFO_FORMATTER(new) SPACE_INFO_FORMATTER(
-             old) SPACE_INFO_FORMATTER(code) SPACE_INFO_FORMATTER(map)
-             SPACE_INFO_FORMATTER(lo) SPACE_INFO_FORMATTER(read_only)
-                 SPACE_INFO_FORMATTER(new_lo) SPACE_INFO_FORMATTER(code_lo),
-         // rss
-         rss,
-         // heap statistics
-         heap_statistics->used_heap_size(),
-         heap_statistics->total_available_size(),
-         heap_statistics->total_heap_size(), heap_statistics->heap_size_limit(),
-         heap_statistics->total_heap_size_executable(),
-         heap_statistics->total_physical_size(),
-         heap_statistics->malloced_memory(), heap_statistics->external_memory(),
-         // space statistics
-         LOG_SPACE_INFO(new), LOG_SPACE_INFO(old), LOG_SPACE_INFO(code),
-         LOG_SPACE_INFO(map), LOG_SPACE_INFO(large_object),
-         LOG_SPACE_INFO(read_only), LOG_SPACE_INFO(new_large_object),
-         LOG_SPACE_INFO(code_large_object));
-  }
+  Info("memory",
+       COMMON_INFO_FORMATTERX SPACE_INFO_FORMATTER(new)
+           SPACE_INFO_FORMATTER(old) SPACE_INFO_FORMATTER(code)
+               SPACE_INFO_FORMATTER(map) SPACE_INFO_FORMATTER(lo)
+                   SPACE_INFO_FORMATTER(read_only) SPACE_INFO_FORMATTER(new_lo)
+                       SPACE_INFO_FORMATTER(code_lo),
+       // rss
+       rss,
+       // heap statistics
+       heap_statistics->used_heap_size(),
+       heap_statistics->total_available_size(),
+       heap_statistics->total_heap_size(), heap_statistics->heap_size_limit(),
+       heap_statistics->total_heap_size_executable(),
+       heap_statistics->total_physical_size(),
+       heap_statistics->malloced_memory(), heap_statistics->external_memory(),
+       // space statistics
+       LOG_SPACE_INFO(new), LOG_SPACE_INFO(old), LOG_SPACE_INFO(code),
+       LOG_SPACE_INFO(map), LOG_SPACE_INFO(large_object),
+       LOG_SPACE_INFO(read_only), LOG_SPACE_INFO(new_large_object),
+       LOG_SPACE_INFO(code_large_object));
 }
 }  // namespace xprofiler

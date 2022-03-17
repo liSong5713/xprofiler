@@ -78,19 +78,15 @@ void WriteLibuvHandleInfoToLog(EnvironmentData* env_data,
   bool enable_log_uv_handles = GetEnableLogUvHandles();
   UvHandleStatistics* uv_handle_statistics = env_data->uv_handle_statistics();
 
-  if (log_format_alinode) {
-    Info("timer", "total_timer: %d, active_handles: %d",
-         uv_handle_statistics->active_timer_handles,
-         uv_handle_statistics->active_handles);
-  } else if (enable_log_uv_handles) {
+  if (enable_log_uv_handles) {
     Info("uv",
-         "active_handles: %d, "
-         "active_file_handles: %d, "
-         "active_and_ref_file_handles: %d, "
-         "active_tcp_handles: %d, "
-         "active_and_ref_tcp_handles: %d, "
-         "active_udp_handles: %d, "
-         "active_and_ref_udp_handles: %d, "
+         "active_handles: %d\t"
+         "active_file_handles: %d\t"
+         "active_and_ref_file_handles: %d\t"
+         "active_tcp_handles: %d\t"
+         "active_and_ref_tcp_handles: %d\t"
+         "active_udp_handles: %d\t"
+         "active_and_ref_udp_handles: %d\t"
          "active_timer_handles: %d, "
          "active_and_ref_timer_handles: %d",
          uv_handle_statistics->active_handles,
