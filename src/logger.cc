@@ -59,11 +59,7 @@ static void WriteToFile(const LOG_LEVEL output_level, char* log) {
   // get filepath and write to file
   string log_dir = GetLogDir();
   string filepath = log_dir + GetSep();
-  bool log_format_alinode = GetFormatAsAlinode();
   string file_prefix = "xprofiler-";
-  if (log_format_alinode) {
-    file_prefix = "node-";
-  }
   switch (output_level) {
     case LOG_LEVEL::LOG_INFO:
       filepath += file_prefix + time_string_day + ".log";
@@ -93,21 +89,12 @@ static void Log(const LOG_LEVEL output_level, const char* type,
     return;
   }
   string log_fragment = GetLogFragment();
-  // check if alinode
-  bool log_format_alinode = GetFormatAsAlinode();
   // time of day
   char time_string_ms[64];
   char time_string_ms_alinode[64];
   time_t tt = time(NULL);
   struct tm* ptm = localtime(&tt);
   strftime(time_string_ms, sizeof(time_string_ms), "%Y-%m-%d %H:%M:%S", ptm);
-  if (log_format_alinode) {
-    uv_timeval64_t tv;
-    uv_gettimeofday(&tv);
-    snprintf(time_string_ms_alinode, sizeof(time_string_ms_alinode), "%s.%06d",
-             time_string_ms, tv.tv_usec);
-  }
-
   // log level
   string level_string = "";
   switch (output_level) {
