@@ -6,8 +6,8 @@
     "format": "string"
   },
   {
-    "name": "log_group",
-    "env": "XPROFILER_LOG_GROUP",
+    "name": "log_fragment",
+    "env": "XPROFILER_LOG_FRAGMENT",
     "rules": ["string"],
     "format": "string"
   },

@@ -6,7 +6,7 @@
 namespace xprofiler {
 std::string GetLogDir() { return per_process::config_store.log_dir; }
 
-std::string GetLogGroup() { return per_process::config_store.log_group; }
+std::string GetLogFragment() { return per_process::config_store.log_fragment; }
 
 uint32_t GetLogInterval() { return per_process::config_store.log_interval; }
 
