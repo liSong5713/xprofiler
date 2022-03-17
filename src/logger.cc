@@ -130,15 +130,9 @@ static void Log(const LOG_LEVEL output_level, const char* type,
 
   // add log prefix
   char tmp_format[kMaxFormatLength];
-  if (log_format_alinode) {
-    snprintf(tmp_format, sizeof(tmp_format), "[%s] [%s] [%s] [%s] %s\n",
-             time_string_ms_alinode, level_string.c_str(), type, pid.c_str(),
-             format);
-  } else {
-    snprintf(tmp_format, sizeof(tmp_format), "time_stamp: %s\tlevel: %s\ttype: %s\tpid: %s\t%s\t%s\n",
+  snprintf(tmp_format, sizeof(tmp_format), "time_stamp: %s\tlevel: %s\ttype: %s\tpid: %s\t%s\t%s\n",
              time_string_ms, level_string.c_str(), type, pid.c_str(), log_fragment.c_str(),
              format);
-  }
 
   // compose log
   char tmp_log[kMaxMessageLength];
