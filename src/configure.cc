@@ -71,6 +71,7 @@ void Configure(const FunctionCallbackInfo<Value>& info) {
   Local<Object> config = To<Object>(info[0]).ToLocalChecked();
 
   COVERT_STRING(log_dir)
+  COVERT_STRING(log_group)
   CONVERT_UINT32(log_interval)
   CONVERT_UINT32_WITH_TYPE(log_level, LOG_LEVEL)
   CONVERT_UINT32_WITH_TYPE(log_type, LOG_TYPE)
@@ -89,6 +90,7 @@ void GetConfig(const FunctionCallbackInfo<Value>& info) {
   Local<Object> config = New<Object>();
 
   CONFIG_LOCAL_STRING(log_dir, String)
+  CONFIG_LOCAL_STRING(log_group, String)
   CONFIG_NATIVE_NUMBER(log_interval, Number)
   CONFIG_NATIVE_NUMBER(log_level, Number)
   CONFIG_NATIVE_NUMBER(log_type, Number)

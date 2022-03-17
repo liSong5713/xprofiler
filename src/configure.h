@@ -9,6 +9,7 @@
 namespace xprofiler {
 
 inline std::string GetLogDir();
+inline std::string GetLogGroup();
 inline uint32_t GetLogInterval();
 inline LOG_LEVEL GetLogLevel();
 inline LOG_TYPE GetLogType();
@@ -31,6 +32,7 @@ class ConfigStore {
   // TODO(legendecas): accessors.
  public:
   std::string log_dir = "/tmp";
+  std::string log_group = "unkown";
   uint32_t log_interval = 60;
   LOG_LEVEL log_level = LOG_ERROR;
   LOG_TYPE log_type = LOG_TO_FILE;

@@ -6,6 +6,8 @@
 namespace xprofiler {
 std::string GetLogDir() { return per_process::config_store.log_dir; }
 
+std::string GetLogGroup() { return per_process::config_store.log_group; }
+
 uint32_t GetLogInterval() { return per_process::config_store.log_interval; }
 
 LOG_LEVEL GetLogLevel() { return per_process::config_store.log_level; }

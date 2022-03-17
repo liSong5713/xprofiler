@@ -32,6 +32,7 @@ COMMAND_CALLBACK(GetXprofilerConfig) {
   data["patch_http"] = GetPatchHttp();
   data["patch_http_timeout"] = GetPatchHttpTimeout();
   data["check_throw"] = GetCheckThrow();
+  data["log_group"] = GetLogGroup();
   success(data);
 }
 

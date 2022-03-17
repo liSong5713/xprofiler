@@ -92,10 +92,9 @@ static void Log(const LOG_LEVEL output_level, const char* type,
   if (level < output_level) {
     return;
   }
-
+  string log_group = GetLogGroup();
   // check if alinode
   bool log_format_alinode = GetFormatAsAlinode();
-
   // time of day
   char time_string_ms[64];
   char time_string_ms_alinode[64];
@@ -136,8 +135,8 @@ static void Log(const LOG_LEVEL output_level, const char* type,
              time_string_ms_alinode, level_string.c_str(), type, pid.c_str(),
              format);
   } else {
-    snprintf(tmp_format, sizeof(tmp_format), "time_stamp: %s, level: %s, type: %s, pid: %s, %s\n",
-             time_string_ms, level_string.c_str(), type, pid.c_str(),
+    snprintf(tmp_format, sizeof(tmp_format), "time_stamp: %s, level: %s, type: %s, pid: %s, group: %s, %s\n",
+             time_string_ms, level_string.c_str(), type, pid.c_str(), log_group.c_str(),
              format);
   }
 
