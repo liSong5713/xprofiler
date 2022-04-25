@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "environment_data.h"
 #include "library/common.h"
 #include "library/utils.h"
 #include "library/writer.h"
@@ -16,9 +17,17 @@ NodeReport::NodeReport(v8::Isolate* isolate) : isolate_(isolate) {}
 
 void NodeReport::WriteNodeReport(JSONWriter* writer, std::string location,
                                  std::string message, bool fatal_error) {
+  // This method should be lock-free to prevent unexpected dead-lock in
+  // abort/CHECK/v8::ApiCheck in arbitrary procedures.
   writer->json_start();
 
   writer->json_keyvalue("pid", GetPid());
+  {
+    EnvironmentData* data = EnvironmentData::TryGetCurrent();
+    if (data != nullptr) {
+      writer->json_keyvalue("thread_id", data->thread_id());
+    }
+  }
   writer->json_keyvalue("location", location);
   writer->json_keyvalue("message", message);
   writer->json_keyvalue("nodeVersion", NODE_VERSION);

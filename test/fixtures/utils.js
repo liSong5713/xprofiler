@@ -8,7 +8,8 @@ const pack = require('../../package.json');
 const MAGIC_BLURRY_TAG = pack.blurryTag;
 
 exports.xprofilerPrefixRegexp =
-  /\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[(.+)\] \[(.+)\] \[(\d+)\] \[(\d{1,3}\.\d{1,3}\.\d{1,3}.*)\] (.*)/g;
+// eslint-disable-next-line max-len
+  /\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[(.+)\] \[(.+)\] \[(\d+)\] \[(\d+)\] \[(\d{1,3}\.\d{1,3}\.\d{1,3}[a-zA-Z0-9\-_]*)\] (.*)/g;
 
 exports.alinodePrefixRegexp =
   /\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6}\] \[(.+)\] \[(.+)\] \[(\d+)\] (.*)/g;
@@ -119,9 +120,11 @@ exports.fork = function fork(filepath, options = {}) {
   let stderr = '';
   proc.stdout.on('data', chunk => {
     stdout += chunk;
+    console.log('child:', chunk);
   });
   proc.stderr.on('data', chunk => {
     stderr += chunk;
+    console.error('child:', chunk);
   });
 
   proc.on('exit', (code, signal) => {

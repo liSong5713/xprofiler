@@ -1,9 +1,11 @@
 #ifndef XPROFILER_SRC_LIBRARY_COMMON_H
 #define XPROFILER_SRC_LIBRARY_COMMON_H
 
-#include "json.hpp"
+#include <string>
 
 namespace xprofiler {
+constexpr uint64_t kNanosecondsPerSecond = 1e9;
+
 void InitOnceLoadTime();
 
 // uptime
@@ -11,11 +13,11 @@ unsigned long GetUptime();
 std::string GetStartTime(std::string format);
 size_t GetNextDiagFileId();
 
-// commands
-#define COMMAND_CALLBACK(cb)                                               \
-  void cb(nlohmann::json command, std::string (*format)(const char*, ...), \
-          std::function<void(nlohmann::json)> success,                     \
-          std::function<void(std::string)> error)
+/**
+ * Update the type when we can get integer thread_id from Node.js
+ */
+using ThreadId = double;
+
 }  // namespace xprofiler
 
 #endif /* XPROFILER_SRC_LIBRARY_COMMON_H */

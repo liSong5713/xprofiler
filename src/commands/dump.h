@@ -1,10 +1,11 @@
 #ifndef XPROFILER_SRC_COMMANDS_DUMP_H
 #define XPROFILER_SRC_COMMANDS_DUMP_H
 
+#include <unordered_map>
+#include <vector>
+
+#include "commands/parser.h"
 #include "library/common.h"
-#include "library/utils.h"
-#include "unordered_map"
-#include "vector"
 
 namespace xprofiler {
 
@@ -27,6 +28,7 @@ using DependentMap = std::unordered_map<int, DumpAction>;
 struct BaseDumpData {
   std::string traceid;
   DumpAction action;
+  ThreadId thread_id;
   int profiling_time;
   bool run_once = true;
 };

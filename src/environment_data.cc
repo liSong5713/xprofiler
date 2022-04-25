@@ -9,32 +9,33 @@
 #include "xpf_v8.h"
 
 namespace xprofiler {
+using v8::Boolean;
 using v8::Context;
 using v8::Isolate;
 using v8::Local;
 using v8::Number;
 using v8::Object;
 
-// static
-EnvironmentData* EnvironmentData::GetCurrent() {
-  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
-  EnvironmentRegistry::NoExitScope scope(registry);
-
-  CHECK_NE(registry->begin(), registry->end());
-  return *registry->begin();
+namespace per_thread {
+thread_local EnvironmentData* environment_data = nullptr;
 }
 
 // static
 EnvironmentData* EnvironmentData::GetCurrent(v8::Isolate* isolate) {
-  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
-  EnvironmentRegistry::NoExitScope scope(registry);
-  return registry->Get(isolate);
+  CHECK_NE(per_thread::environment_data, nullptr);
+  CHECK_EQ(per_thread::environment_data->isolate(), isolate);
+  return per_thread::environment_data;
 }
 
 // static
 EnvironmentData* EnvironmentData::GetCurrent(
     const Nan::FunctionCallbackInfo<v8::Value>& info) {
   return EnvironmentData::GetCurrent(info.GetIsolate());
+}
+
+// static
+EnvironmentData* EnvironmentData::TryGetCurrent() {
+  return per_thread::environment_data;
 }
 
 // static
@@ -52,11 +53,12 @@ void EnvironmentData::Create(v8::Isolate* isolate) {
 }
 
 EnvironmentData::EnvironmentData(v8::Isolate* isolate, uv_loop_t* loop)
-    : isolate_(isolate), loop_(loop) {
+    : time_origin_(uv_hrtime()), isolate_(isolate), loop_(loop) {
   CHECK_EQ(0, uv_async_init(loop, &interrupt_async_, InterruptIdleCallback));
   uv_unref(reinterpret_cast<uv_handle_t*>(&interrupt_async_));
   CHECK_EQ(0, uv_async_init(loop, &statistics_async_, CollectStatistics));
   uv_unref(reinterpret_cast<uv_handle_t*>(&statistics_async_));
+  per_thread::environment_data = this;
 }
 
 // static
@@ -69,6 +71,7 @@ void EnvironmentData::AtExit(void* arg) {
            nullptr);
   uv_close(reinterpret_cast<uv_handle_t*>(&env_data->statistics_async_),
            CloseCallback);
+  per_thread::environment_data = nullptr;
   env_data.release();
 }
 
@@ -91,6 +94,11 @@ void EnvironmentData::RequestInterrupt(InterruptCallback interrupt) {
   }
   isolate_->RequestInterrupt(InterruptBusyCallback, this);
   uv_async_send(&interrupt_async_);
+}
+
+uint64_t EnvironmentData::GetUptime() const {
+  uint64_t now = uv_hrtime();
+  return (now - time_origin_) / kNanosecondsPerSecond;
 }
 
 // static
@@ -131,7 +139,9 @@ void EnvironmentData::CollectStatistics(uv_async_t* handle) {
 }
 
 // javascript accessible
-void JsSetupEnvironmentData(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+// static
+void EnvironmentData::JsSetupEnvironmentData(
+    const Nan::FunctionCallbackInfo<v8::Value>& info) {
   Isolate* isolate = info.GetIsolate();
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
   HandleScope scope(isolate);
@@ -142,7 +152,13 @@ void JsSetupEnvironmentData(const Nan::FunctionCallbackInfo<v8::Value>& info) {
       data->Get(context, OneByteString(isolate, "threadId"))
           .ToLocalChecked()
           .As<Number>();
-  env_data->set_thread_id(thread_id->Value());
+  Local<Boolean> is_main_thread =
+      data->Get(context, OneByteString(isolate, "isMainThread"))
+          .ToLocalChecked()
+          .As<Boolean>();
+
+  env_data->thread_id_ = thread_id->Value();
+  env_data->is_main_thread_ = is_main_thread->Value();
 }
 
 }  // namespace xprofiler

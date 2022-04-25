@@ -1,16 +1,17 @@
+#include "logger.h"
+
 #include <stdarg.h>
-
-#include <fstream>
-
-#include "uv.h"
-
 #ifdef _WIN32
 #include <time.h>
 #endif
 
+#include <fstream>
+
 #include "configure-inl.h"
+#include "environment_data.h"
 #include "platform/platform.h"
 #include "util.h"
+#include "uv.h"
 
 namespace xprofiler {
 using Nan::FunctionCallbackInfo;
@@ -23,24 +24,6 @@ using std::to_string;
 using v8::Local;
 using v8::String;
 using v8::Value;
-
-#define LOG_WITH_LEVEL(level)                     \
-  va_list args;                                   \
-  va_start(args, format);                         \
-  Log(LOG_LEVEL::level, log_type, format, &args); \
-  va_end(args);
-
-#define JS_LOG_WITH_LEVEL(level)                                               \
-  if (!info[0]->IsString() || !info[1]->IsString()) {                          \
-    ThrowTypeError(                                                            \
-        New<String>("log type and content must be string!").ToLocalChecked()); \
-    return;                                                                    \
-  }                                                                            \
-  Local<String> log_type_string = To<String>(info[0]).ToLocalChecked();        \
-  Utf8String log_type(log_type_string);                                        \
-  Local<String> log_content_string = To<String>(info[1]).ToLocalChecked();     \
-  Utf8String log_content(log_content_string);                                  \
-  Log(LOG_LEVEL::level, *log_type, *log_content);
 
 static const int kMaxMessageLength = 2048;
 static const int kMaxFormatLength = 2048;
@@ -83,7 +66,8 @@ static void WriteToFile(const LOG_LEVEL output_level, char* log) {
 }
 
 static void Log(const LOG_LEVEL output_level, const char* type,
-                const char* format, va_list* arglist = nullptr) {
+                ThreadId thread_id, const char* format,
+                va_list* arglist = nullptr) {
   LOG_LEVEL level = GetLogLevel();
   if (level < output_level) {
     return;
@@ -91,7 +75,6 @@ static void Log(const LOG_LEVEL output_level, const char* type,
   string log_fragment = GetLogFragment();
   // time of day
   char time_string_ms[64];
-  char time_string_ms_alinode[64];
   time_t tt = time(NULL);
   struct tm* ptm = localtime(&tt);
   strftime(time_string_ms, sizeof(time_string_ms), "%Y-%m-%d %H:%M:%S", ptm);
@@ -114,6 +97,7 @@ static void Log(const LOG_LEVEL output_level, const char* type,
 
   // get pid
   string pid = to_string(GetPid());
+  string tid = to_string(static_cast<long>(thread_id));
 
   // add log prefix
   char tmp_format[kMaxFormatLength];
@@ -131,7 +115,7 @@ static void Log(const LOG_LEVEL output_level, const char* type,
   // get log type
   switch (GetLogType()) {
     // tty
-    case LOG_TYPE::LOG_TO_TTL:
+    case LOG_TYPE::LOG_TO_TTY:
       printf("%s", tmp_log);
       WriteToFile(output_level, tmp_log);
       break;
@@ -149,17 +133,46 @@ void InitOnceLogger() {
 }
 
 /* native logger */
-void Info(const char* log_type, const char* format, ...) {
-  LOG_WITH_LEVEL(LOG_INFO)
-}
 
-void Error(const char* log_type, const char* format, ...) {
-  LOG_WITH_LEVEL(LOG_ERROR)
-}
+#define NATIVE_LOGGERS(V) \
+  V(Info, LOG_INFO)       \
+  V(Error, LOG_ERROR)     \
+  V(Debug, LOG_DEBUG)
 
-void Debug(const char* log_type, const char* format, ...) {
-  LOG_WITH_LEVEL(LOG_DEBUG)
-}
+#define DEFINE_LOGGER(name, level)                            \
+  void name(const char* component, const char* format, ...) { \
+    va_list args;                                             \
+    va_start(args, format);                                   \
+    Log(LOG_LEVEL::level, component, 0, format, &args);       \
+    va_end(args);                                             \
+  }
+NATIVE_LOGGERS(DEFINE_LOGGER);
+#undef DEFINE_LOGGER
+
+#define DEFINE_LOGGER(name, level)                                            \
+  void name##T(const char* component, ThreadId thread_id, const char* format, \
+               ...) {                                                         \
+    va_list args;                                                             \
+    va_start(args, format);                                                   \
+    Log(LOG_LEVEL::level, component, thread_id, format, &args);               \
+    va_end(args);                                                             \
+  }
+NATIVE_LOGGERS(DEFINE_LOGGER);
+#undef DEFINE_LOGGER
+
+#define JS_LOG_WITH_LEVEL(level)                                               \
+  if (!info[0]->IsString() || !info[1]->IsString()) {                          \
+    ThrowTypeError(                                                            \
+        New<String>("log type and content must be string!").ToLocalChecked()); \
+    return;                                                                    \
+  }                                                                            \
+  EnvironmentData* env_data = EnvironmentData::GetCurrent(info);               \
+                                                                               \
+  Local<String> component_string = To<String>(info[0]).ToLocalChecked();       \
+  Utf8String component(component_string);                                      \
+  Local<String> log_content_string = To<String>(info[1]).ToLocalChecked();     \
+  Utf8String log_content(log_content_string);                                  \
+  Log(level, *component, env_data->thread_id(), *log_content);
 
 /* js binding logger */
 void JsInfo(const FunctionCallbackInfo<Value>& info) {
@@ -173,4 +186,5 @@ void JsError(const FunctionCallbackInfo<Value>& info) {
 void JsDebug(const FunctionCallbackInfo<Value>& info) {
   JS_LOG_WITH_LEVEL(LOG_DEBUG)
 }
+
 };  // namespace xprofiler
