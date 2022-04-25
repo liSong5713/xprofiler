@@ -57,7 +57,6 @@
   "homepage": "https://github.com/X-Profiler/xprofiler#readme",
   "dependencies": {
     "@xprofiler/node-pre-gyp": "^1.0.9",
-    "dayjs": "^1.10.8",
     "nan": "^2.15.0",
     "uuid": "^8.3.2",
     "yargs": "^15.4.1"
@@ -67,6 +66,7 @@
     "autod": "^3.1.2",
     "clang-format": "1.6.0",
     "codecov": "^3.8.3",
+    "dayjs": "^1.10.8",
     "eslint": "^6.8.0",
     "expect.js": "^0.3.1",
     "formstream": "^1.1.1",

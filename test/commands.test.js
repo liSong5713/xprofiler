@@ -59,7 +59,7 @@ describe('commands', () => {
         let exitInfo = { code: null, signal: null };
         before(async function () {
           mm(os, 'homedir', () => tmphome);
-          console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, 'start fork.');
+          console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]`, 'start fork.');
           const p = cp.fork(jspath, {
             env: Object.assign({}, process.env, {
               XPROFILER_LOG_DIR: logdir,
@@ -71,20 +71,20 @@ describe('commands', () => {
           pid = p.pid;
           await utils.sleep(4500);
           // send cmd with xctl (function)
-          console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, 'send xctl cmd.');
+          console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]`, 'send xctl cmd.');
           resByXctl = await xctl(pid, threadId, cmd, options);
           await utils.sleep(500);
           // send cmd with xprofctl (cli)
           const extra = convertOptions(options);
           const nodeExe = os.platform() === 'win32' ? 'node ' : '';
-          console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, 'send xprofctl cmd.');
+          console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]`, 'send xprofctl cmd.');
           resByXprofctl = await exec(`${nodeExe}${xprofctl} ${cmd} -p ${pid} -w ${threadId}${extra}`, {
             env: Object.assign({}, process.env, {
               XPROFILER_UNIT_TEST_TMP_HOMEDIR: tmphome
             })
           });
           resByXprofctl = resByXprofctl.stderr.trim() + resByXprofctl.stdout.trim();
-          console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, 'wait for child process done.');
+          console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]`, 'wait for child process done.');
           exitInfo = await utils.getChildProcessExitInfo(p);
         });
 
@@ -97,7 +97,7 @@ describe('commands', () => {
         });
 
         it(`child process should be exited with code 0`, function () {
-          console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, `exit info: ${JSON.stringify(exitInfo)}`);
+          console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]`, `exit info: ${JSON.stringify(exitInfo)}`);
           utils.checkChildProcessExitInfo(expect, exitInfo);
         });
 

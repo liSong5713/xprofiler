@@ -7,7 +7,6 @@ module.exports = {
     'test',
   ],
   dep: [
-    'moment',
     'nan',
     '@xprofiler/node-pre-gyp',
     'uuid',
