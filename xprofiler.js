@@ -64,7 +64,7 @@ function start(config = {}) {
 
   if (workerThreads.isMainThread) {
     // check socket path
-    checkSocketPath(finalConfig);
+    // checkSocketPath(finalConfig);
 
     // clean & set logdir info to file
     const logdir = finalConfig.log_dir;
