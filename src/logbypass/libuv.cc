@@ -99,7 +99,7 @@ void WriteLibuvHandleInfoToLog(EnvironmentData* env_data,
          uv_handle_statistics->active_timer_handles,
          uv_handle_statistics->active_and_ref_timer_handles);
   } else {
-    InfoT("uv", env_data->thread_id(), "[%ld] active_handles: %d",
+    InfoT("uv", env_data->thread_id(), "active_handles: %ld",
           uv_handle_statistics->active_handles);
   }
 }

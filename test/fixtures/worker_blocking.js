@@ -1,14 +1,11 @@
 'use strict';
 
-if (Number.parseInt(process.versions.node.split('.')[0], 10) <= 10) {
-  process.exit(0);
-}
-
 const workerThreads = require('worker_threads');
 const os = require('os');
 const mm = require('mm');
 const moment = require('moment');
 const { v4: uuid } = require('uuid');
+const utils = require('./utils');
 
 const traceid = uuid();
 
@@ -27,7 +24,9 @@ if (workerThreads.isMainThread) {
   w.on('exit', code => {
     console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, traceid, 'worker exited', code);
   });
+  w.on('message', msg => process.send(msg));
 } else {
+  workerThreads.parentPort.postMessage({ type: utils.clientConst.xprofilerDone });
   console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}]`, traceid, 'blocking start.');
 
   const start = Date.now();

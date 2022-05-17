@@ -10,8 +10,10 @@
 #include "configure-inl.h"
 #include "environment_data.h"
 #include "platform/platform.h"
+#include "process_data.h"
 #include "util.h"
 #include "uv.h"
+#include "xpf_mutex-inl.h"
 
 namespace xprofiler {
 using Nan::FunctionCallbackInfo;
@@ -27,10 +29,6 @@ using v8::Value;
 
 static const int kMaxMessageLength = 2048;
 static const int kMaxFormatLength = 2048;
-
-namespace per_process {
-uv_mutex_t logger_mutex;
-}
 
 static void WriteToFile(const LOG_LEVEL output_level, char* log) {
   // get time of date
@@ -57,12 +55,11 @@ static void WriteToFile(const LOG_LEVEL output_level, char* log) {
       UNREACHABLE();
   }
 
-  uv_mutex_lock(&per_process::logger_mutex);
   {
+    Mutex::ScopedLock lock(ProcessData::Get()->logger_mutex);
     std::ofstream ostream(filepath, std::ios::app);
     ostream << log;
   }
-  uv_mutex_unlock(&per_process::logger_mutex);
 }
 
 static void Log(const LOG_LEVEL output_level, const char* type,
@@ -126,10 +123,6 @@ static void Log(const LOG_LEVEL output_level, const char* type,
     default:
       break;
   }
-}
-
-void InitOnceLogger() {
-  CHECK_EQ(uv_mutex_init(&per_process::logger_mutex), 0);
 }
 
 /* native logger */

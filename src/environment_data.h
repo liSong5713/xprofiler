@@ -39,6 +39,12 @@ class EnvironmentData {
   void SendCollectStatistics();
 
   void RequestInterrupt(InterruptCallback interrupt);
+  void AddGCEpilogueCallback(Nan::GCEpilogueCallback callback,
+                             v8::GCType gc_type_filter = v8::kGCTypeAll);
+  void RemoveGCEpilogueCallback(Nan::GCEpilogueCallback callback);
+  void AddGCPrologueCallback(Nan::GCPrologueCallback callback,
+                             v8::GCType gc_type_filter = v8::kGCTypeAll);
+  void RemoveGCPrologueCallback(Nan::GCPrologueCallback callback);
 
   uint64_t GetUptime() const;
 
@@ -60,6 +66,7 @@ class EnvironmentData {
 
  private:
   static void AtExit(void* arg);
+  template <uv_async_t EnvironmentData::*field>
   static void CloseCallback(uv_handle_t* handle);
   static void InterruptBusyCallback(v8::Isolate* isolate, void* data);
   static void InterruptIdleCallback(uv_async_t* handle);
@@ -82,11 +89,16 @@ class EnvironmentData {
   Mutex interrupt_mutex_;
   std::list<InterruptCallback> interrupt_requests_;
   uv_async_t interrupt_async_;
+  std::list<Nan::GCEpilogueCallback> gc_epilogue_callbacks_;
+  std::list<Nan::GCPrologueCallback> gc_prologue_callbacks_;
 
   GcStatistics gc_statistics_;
   MemoryStatistics memory_statistics_;
   HttpStatistics http_statistics_;
   UvHandleStatistics uv_handle_statistics_;
+
+  uint32_t closed_handle_count_ = 0;
+  static const uint32_t kHandleCount = 2;
 };
 
 }  // namespace xprofiler

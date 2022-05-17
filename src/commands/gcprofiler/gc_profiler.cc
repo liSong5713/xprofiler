@@ -7,10 +7,6 @@
 #include "nan.h"
 
 namespace xprofiler {
-using Nan::AddGCEpilogueCallback;
-using Nan::AddGCPrologueCallback;
-using Nan::RemoveGCEpilogueCallback;
-using Nan::RemoveGCPrologueCallback;
 using std::ios;
 using std::ofstream;
 using v8::GCType;
@@ -77,13 +73,14 @@ void GcProfiler::StartGCProfiling(v8::Isolate* isolate, std::string filename) {
   std::unique_ptr<GcProfiler> gc_profiler =
       std::unique_ptr<GcProfiler>(new GcProfiler(isolate, filename));
   if (!gc_profiler->is_open()) {
-    Error("gc_profiler", "open file %s failed.", filename.c_str());
+    ErrorT("gc_profiler", env_data->thread_id(), "open file %s failed.",
+           filename.c_str());
     return;
   }
   env_data->gc_profiler = std::move(gc_profiler);
 
-  AddGCPrologueCallback(GCTracerPrologueCallback);
-  AddGCEpilogueCallback(GCTracerEpilogueCallback);
+  env_data->AddGCPrologueCallback(GCTracerPrologueCallback);
+  env_data->AddGCEpilogueCallback(GCTracerEpilogueCallback);
 
   JSONWriter* writer = env_data->gc_profiler->writer();
   writer->json_start();
@@ -92,9 +89,10 @@ void GcProfiler::StartGCProfiling(v8::Isolate* isolate, std::string filename) {
 }
 
 void GcProfiler::StopGCProfiling(v8::Isolate* isolate) {
-  RemoveGCPrologueCallback(GCTracerPrologueCallback);
-  RemoveGCEpilogueCallback(GCTracerEpilogueCallback);
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
+  env_data->RemoveGCPrologueCallback(GCTracerPrologueCallback);
+  env_data->RemoveGCEpilogueCallback(GCTracerEpilogueCallback);
+
   if (env_data->gc_profiler == nullptr) {
     return;
   }
