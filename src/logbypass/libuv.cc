@@ -87,7 +87,7 @@ void WriteLibuvHandleInfoToLog(EnvironmentData* env_data,
          "active_and_ref_tcp_handles: %d\t"
          "active_udp_handles: %d\t"
          "active_and_ref_udp_handles: %d\t"
-         "active_timer_handles: %d, "
+         "active_timer_handles: %d\t"
          "active_and_ref_timer_handles: %d",
          uv_handle_statistics->active_handles,
          uv_handle_statistics->active_file_handles,

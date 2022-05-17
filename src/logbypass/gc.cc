@@ -88,15 +88,15 @@ void WriteGcStatusToLog(EnvironmentData* env_data, bool log_format_alinode) {
   Mutex::ScopedLock lock(gc_statistics->mutex);
 
   InfoT("gc", env_data->thread_id(),
-        "uptime: %lu, "
-        "total_gc_times: %u, "
-        "total_gc_duration: %lu, "
-        "total_scavange_duration: %lu, "
-        "total_marksweep_duration: %lu, "
-        "total_incremental_marking_duration: %lu, "
-        "gc_time_during_last_record: %lu, "
-        "scavange_duration_last_record: %lu, "
-        "marksweep_duration_last_record: %lu, "
+        "uptime: %lu\t"
+        "total_gc_times: %lu\t"
+        "total_gc_duration: %lu\t"
+        "total_scavange_duration: %lu\t"
+        "total_marksweep_duration: %lu\t"
+        "total_incremental_marking_duration: %lu\t"
+        "gc_time_during_last_record: %lu\t"
+        "scavange_duration_last_record: %lu\t"
+        "marksweep_duration_last_record: %lu\t"
         "incremental_marking_duration_last_record: %lu",
         env_data->GetUptime(),  // uptime, s
         // total
