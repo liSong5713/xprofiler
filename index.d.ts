@@ -1,11 +1,11 @@
 export as namespace xprofiler;
 
 export interface XprofilerConfig {
+  log_fragment?: string;
   log_dir?: string;
   log_interval?: number;
   log_level?: 0 | 1 | 2;
   log_type?: 0 | 1;
-  log_format_alinode?: boolean;
   enable_log_uv_handles?: boolean;
   patch_http?: boolean;
   patch_http_timeout?: number;

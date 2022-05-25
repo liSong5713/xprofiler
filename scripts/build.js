@@ -52,11 +52,7 @@ module.exports = async versions => {
     debug(`>>>>>>>> start build with ${version}`);
     const tnvmPath = path.join(os.homedir(), '.tnvm/tnvm.sh');
     let npmBin = 'npm';
-<<<<<<< HEAD
-    let change = `source ~/.bashrc && nvm use ${version}`;
-=======
     let change = `source ${tnvmPath} && tnvm use ${version}`;
->>>>>>> v2.0.1
     const nvmNodeVersion = /^node-v(.*)$/.exec(version)[1];
     if (isWindows) {
       npmBin = path.join(os.tmpdir(), '../../', `Roaming\\nvm\\v${nvmNodeVersion}\\npm.cmd`);
