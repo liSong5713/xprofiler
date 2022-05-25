@@ -41,7 +41,7 @@ void RunCommandsListener(const FunctionCallbackInfo<Value>& info) {
   }
   EnvironmentData* env_data = EnvironmentData::GetCurrent(info);
   InfoT("init", env_data->thread_id(),
-        "commands listener: listener thread created.");
+        "commands_listener: listener thread created.");
 
   info.GetReturnValue().Set(True());
 }
