@@ -2,7 +2,7 @@
 
 const path = require('path');
 const utils = require('./lib/utils');
-const clean = require('./lib/clean');
+const cleanUDS_FD = require('./lib/clean');
 const { patch } = require('./patch');
 const configure = require('./lib/configure');
 const configList = require('./xprofiler.json');
@@ -22,7 +22,7 @@ xprofiler.setup({
 const runOnceStatus = {
   bypassLogThreadStarted: false,
   commandsListenerThreadStarted: false,
-  hooksSetted: false
+  hooksSetted: false,
 };
 
 let configured = false;
@@ -37,8 +37,9 @@ function checkNecessary() {
 function checkSocketPath(finalConfig) {
   const passed = xprofiler.checkSocketPath(true);
   if (!passed) {
-    const message = 'socket path is too long, complete log of this error can be found in:\n'
-      + `  ${path.join(finalConfig.log_dir, `xprofiler-error-${dayjs().format('YYYYMMDD')}.log`)}\n`;
+    const message =
+      'socket path is too long, complete log of this error can be found in:\n' +
+      `  ${path.join(finalConfig.log_dir, `xprofiler-error-${dayjs().format('YYYYMMDD')}.log`)}\n`;
     if (finalConfig.check_throw) {
       throw new Error(message);
     }
@@ -68,10 +69,9 @@ function start(config = {}) {
     // check socket path
     checkSocketPath(finalConfig);
 
-    // clean & set logdir info to file
-    const logdir = finalConfig.log_dir;
-    clean(logdir);
-    utils.setLogDirToFile(logdir);
+    // clean uds fd & set logdir info to file
+    cleanUDS_FD(finalConfig.uds_dir);
+    utils.setLogDirToFile(finalConfig.log_dir);
     if (!singleModuleMode) {
       // start commands listener thread if needed
       exports.runCommandsListener();
@@ -92,7 +92,7 @@ function start(config = {}) {
     addCloseRequest: xprofiler.addCloseRequest,
     addSentRequest: xprofiler.addSentRequest,
     addRequestTimeout: xprofiler.addRequestTimeout,
-    addHttpStatusCode: xprofiler.addHttpStatusCode
+    addHttpStatusCode: xprofiler.addHttpStatusCode,
   });
 }
 
@@ -114,10 +114,13 @@ exports.getXprofilerConfig = function () {
   return xprofiler.getConfig();
 };
 
-['info', 'error', 'debug'].forEach(level => exports[level] = function (...args) {
-  checkNecessary();
-  xprofiler[level](...args);
-});
+['info', 'error', 'debug'].forEach(
+  (level) =>
+    (exports[level] = function (...args) {
+      checkNecessary();
+      xprofiler[level](...args);
+    }),
+);
 
 exports.runLogBypass = runOnce.bind(null, 'bypassLogThreadStarted', xprofiler.runLogBypass);
 

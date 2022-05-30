@@ -4,7 +4,7 @@
     {
       "label": "rebuild:debug",
       "type": "shell",
-      "command": "npm run build",
+      "command": "./node_modules/.bin/node-pre-gyp build",
       "group": {
         "kind": "build",
         "isDefault": true

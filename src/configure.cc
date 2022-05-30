@@ -70,6 +70,7 @@ void Configure(const FunctionCallbackInfo<Value>& info) {
   Local<Object> config = To<Object>(info[0]).ToLocalChecked();
 
   COVERT_STRING(log_dir)
+  COVERT_STRING(uds_dir)
   COVERT_STRING(log_fragment)
   CONVERT_UINT32(log_interval)
   CONVERT_UINT32_WITH_TYPE(log_level, LOG_LEVEL)

@@ -2,7 +2,13 @@
   {
     "name": "log_dir",
     "env": "XPROFILER_LOG_DIR",
-    "rules": ["string", "path"],
+    "rules": ["string", "dir"],
+    "format": "string"
+  },
+  {
+    "name": "uds_dir",
+    "env": "XPROFILER_UDS_DIR",
+    "rules": ["string", "dir"],
     "format": "string"
   },
   {

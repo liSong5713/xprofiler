@@ -5,8 +5,12 @@
 #include "process_data.h"
 
 namespace xprofiler {
-std::string GetLogDir() { return ProcessData::Get()->config_store()->log_dir; }
 
+std::string GetLogDir() { return ProcessData::Get()->config_store()->log_dir; }
+// uds socket dir
+std::string GetUDSDir() { return ProcessData::Get()->config_store()->uds_dir; }
+
+// log fragment from nodejs
 std::string GetLogFragment() { return ProcessData::Get()->config_store()->log_fragment; }
 
 uint32_t GetLogInterval() {

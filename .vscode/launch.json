@@ -7,12 +7,21 @@
     {
       "type": "cppdbg",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "debug c++",
       "cwd": "${fileDirname}",
       "preLaunchTask": "rebuild:debug",
       "MIMode": "lldb",
       "program": "/Users/lisong/.nvm/versions/node/v12.22.1/bin/node",
       "args": ["${workspaceFolder}/test/debug.js"]
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "debug node",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/test/debug.js"
     }
   ]
 }

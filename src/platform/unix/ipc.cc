@@ -30,7 +30,7 @@ static const char module_type[] = "ipc";
 
 static string GetSocketPath() {
   string filename =
-      GetLogDir() + "/xprofiler-uds-path-" + std::to_string(getpid()) + ".sock";
+      GetUDSDir() + "/xprofiler-uds-path-" + std::to_string(getpid()) + ".sock";
   return filename;
 }
 
