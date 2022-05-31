@@ -68,7 +68,6 @@ function start(config = {}) {
   if (workerThreads.isMainThread) {
     // check socket path
     checkSocketPath(finalConfig);
-
     // clean uds fd & set logdir info to file
     cleanUDS_FD(finalConfig.uds_dir);
     utils.setLogDirToFile(finalConfig.log_dir);
