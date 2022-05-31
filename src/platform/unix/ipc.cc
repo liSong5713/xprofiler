@@ -138,7 +138,7 @@ void CreateIpcClient(char* message) {
 
   // set client addr
   client_addr.sun_family = AF_UNIX;
-  std::string filename = GetLogDir() + "/" + XPROFILER_IPC_PATH;
+  std::string filename = GetUDSDir() + "/" + XPROFILER_IPC_PATH;
   if (filename.length() > sizeof(client_addr.sun_path) - 1) {
     Error(module_type,
           "the length of <%s> is larger than sizeof(client_addr.sun_path) - 1 "

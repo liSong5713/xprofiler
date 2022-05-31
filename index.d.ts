@@ -3,7 +3,6 @@ export as namespace xprofiler;
 export interface XprofilerConfig {
   log_fragment?: string;
   log_dir?: string;
-  uds_dir: string;
   log_interval?: number;
   log_level?: 0 | 1 | 2;
   log_type?: 0 | 1;

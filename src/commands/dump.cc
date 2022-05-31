@@ -321,7 +321,7 @@ static void ProfilingWatchDog(void* data) {
 }
 
 static string CreateFilepath(string prefix, string ext) {
-  return GetLogDir() + GetSep() + "x-" + prefix + "-" + to_string(GetPid()) +
+  return GetUDSDir() + GetSep() + "x-" + prefix + "-" + to_string(GetPid()) +
          "-" + ConvertTime("%Y%m%d") + "-" + to_string(GetNextDiagFileId()) +
          "." + ext;
 }

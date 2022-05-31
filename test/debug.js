@@ -6,7 +6,6 @@ const xprofiler = require('../xprofiler');
 xprofiler.start({
   log_fragment: `os: ${os.hostname()}\tgroup: one-test`,
   log_dir: path.join('/Users/lisong/office/xprofiler','test', 'logs'), // 性能分析日志输出目录
-  uds_dir: path.join('/Users/lisong/office/xprofiler','test','socks'), // 性能分析日志输出目录
   log_interval: 30,
   enable_log_uv_handles: true, // 不输出 uv 句柄分类详情
   enable_fatal_error_hook:false, //关闭v8 OOM 钩子
