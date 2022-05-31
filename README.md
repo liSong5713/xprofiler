@@ -15,23 +15,22 @@ Easy-Monitor v3.0 Node.js Runtime 插件，输出性能日志，并且可以进�
 xprofiler 插件支持三大主流操作系统：
 
 - Windows
-- Linux
-- macosX
+- Linux (x64 / arm64)
+- macosX (x64 / arm64)
 
 支持的 node.js runtime 版本：
 
-- v8.x
-- v9.x
-- v10.x
-- v11.x
 - v12.x
 - v13.x
 - v14.x
 - v15.x
 - v16.x
 - v17.x
+- v18.x
 
-更低的版本因为已经不在官方 LTS 计划中，故正常情况下不再支持。
+更低的版本因为在此项目创建时已经不在官方 LTS 计划中，故正常情况下不再支持。
+
+需要在 `node-v12.x` 以下的版本中使用，可以使用 `v1.x-staging` 分支的的最新版本：[1.4.0](https://github.com/X-Profiler/xprofiler/tree/v1.x-staging)
 
 
 ## II. 快速开始
@@ -164,7 +163,7 @@ npm i xprofiler -g
 此命令可以对安装并启用了 xprofiler 插件的 node.js 进程进行一些操作，安装后执行 `xprofctl -h` 可以查看其用法:
 
 ```bash
-xprofctl <action> -p <pid> [-t profiling_time]
+xprofctl <action> -p <pid> [-w <thread_id>] [-t profiling_time]
 
 命令：
   xprofctl start_cpu_profiling   启动 cpu 采样
@@ -180,9 +179,10 @@ xprofctl <action> -p <pid> [-t profiling_time]
   xprofctl set_config            设置 xprofiler 配置
 
 选项：
-  -p, --pid      进程 pid                                                [必需]
-  -h, --help     显示帮助信息                                              [布尔]
-  -v, --version  显示版本号                                               [布尔]
+  -p, --pid                  进程 pid               [必需]
+  -w, --worker_thread_id     线程 id                [可选]
+  -h, --help                 显示帮助信息            [布尔]
+  -v, --version              显示版本号              [布尔]
 
 示例：
   xprofctl start_cpu_profiling -p 29156  触发进程 29156 开始进行 cpu 采样
@@ -194,7 +194,7 @@ copyright 2019
 
 ## III. 插件架构和实现原理
 
-// TODO
+参见 [文档 - 整体架构](https://www.yuque.com/hyj1991/easy-monitor/architecture)
 
 
 ## IV. 稳定性

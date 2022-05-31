@@ -1,0 +1,27 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "debug c++",
+      "cwd": "${fileDirname}",
+      "preLaunchTask": "rebuild:debug",
+      "MIMode": "lldb",
+      "program": "/Users/lisong/.nvm/versions/node/v12.22.1/bin/node",
+      "args": ["${workspaceFolder}/test/debug.js"]
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "debug node",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/test/debug.js"
+    }
+  ]
+}

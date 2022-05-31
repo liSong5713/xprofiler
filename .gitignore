@@ -62,7 +62,6 @@ typings/
 
 package-lock.json
 
-.vscode
 
 build
 
@@ -73,4 +72,6 @@ client.js
 logdir
 
 release
+
+logs
 

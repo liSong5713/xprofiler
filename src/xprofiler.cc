@@ -21,7 +21,6 @@ using v8::String;
 NODE_C_CTOR(Main) {
   // init global variables
   InitOnceLoadTime();
-  InitOnceLogger();
 }
 
 #define CREATE_JS_BINDING(js_func, native_func)       \
@@ -41,7 +40,7 @@ NAN_MODULE_INIT(Initialize) {
   CREATE_JS_BINDING(error, JsError);
   CREATE_JS_BINDING(debug, JsDebug);
 
-  CREATE_JS_BINDING(setup, JsSetupEnvironmentData);
+  CREATE_JS_BINDING(setup, EnvironmentData::JsSetupEnvironmentData);
 
   // performance log
   CREATE_JS_BINDING(runLogBypass, RunLogBypass);

@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "rebuild:debug",
+      "type": "shell",
+      "command": "./node_modules/.bin/node-pre-gyp build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

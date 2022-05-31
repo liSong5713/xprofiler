@@ -7,10 +7,6 @@
 #include "nan.h"
 
 namespace xprofiler {
-using Nan::AddGCEpilogueCallback;
-using Nan::AddGCPrologueCallback;
-using Nan::RemoveGCEpilogueCallback;
-using Nan::RemoveGCPrologueCallback;
 using std::ios;
 using std::ofstream;
 using v8::GCType;
@@ -54,7 +50,7 @@ NAN_GC_CALLBACK(GCTracerPrologueCallback) {
   writer->json_start();
   writer->json_keyvalue("totalSpentfromStart", TotalGcDuration());
   writer->json_keyvalue("totalTimesfromStart", TotalGcTimes());
-  writer->json_keyvalue("timeFromStart", GetUptime());
+  writer->json_keyvalue("timeFromStart", env_data->GetUptime());
   writer->json_keyvalue("start",
                         (uv_hrtime() - env_data->gc_profiler->init()) / 10e5);
   write_space_data(isolate, type, writer, "before");
@@ -77,30 +73,32 @@ void GcProfiler::StartGCProfiling(v8::Isolate* isolate, std::string filename) {
   std::unique_ptr<GcProfiler> gc_profiler =
       std::unique_ptr<GcProfiler>(new GcProfiler(isolate, filename));
   if (!gc_profiler->is_open()) {
-    Error("gc_profiler", "open file %s failed.", filename.c_str());
+    ErrorT("gc_profiler", env_data->thread_id(), "open file %s failed.",
+           filename.c_str());
     return;
   }
   env_data->gc_profiler = std::move(gc_profiler);
 
-  AddGCPrologueCallback(GCTracerPrologueCallback);
-  AddGCEpilogueCallback(GCTracerEpilogueCallback);
+  env_data->AddGCPrologueCallback(GCTracerPrologueCallback);
+  env_data->AddGCEpilogueCallback(GCTracerEpilogueCallback);
 
   JSONWriter* writer = env_data->gc_profiler->writer();
   writer->json_start();
-  writer->json_keyvalue("startTime", uv_hrtime() / 10e8);
+  writer->json_keyvalue("startTime", uv_hrtime() / kNanosecondsPerSecond);
   writer->json_arraystart("gc");
 }
 
 void GcProfiler::StopGCProfiling(v8::Isolate* isolate) {
-  RemoveGCPrologueCallback(GCTracerPrologueCallback);
-  RemoveGCEpilogueCallback(GCTracerEpilogueCallback);
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
+  env_data->RemoveGCPrologueCallback(GCTracerPrologueCallback);
+  env_data->RemoveGCEpilogueCallback(GCTracerEpilogueCallback);
+
   if (env_data->gc_profiler == nullptr) {
     return;
   }
   JSONWriter* writer = env_data->gc_profiler->writer();
   writer->json_arrayend();
-  writer->json_keyvalue("stopTime", uv_hrtime() / 10e8);
+  writer->json_keyvalue("stopTime", uv_hrtime() / kNanosecondsPerSecond);
   writer->json_end();
 
   env_data->gc_profiler.reset();

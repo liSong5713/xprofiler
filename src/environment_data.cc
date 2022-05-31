@@ -9,32 +9,33 @@
 #include "xpf_v8.h"
 
 namespace xprofiler {
+using v8::Boolean;
 using v8::Context;
 using v8::Isolate;
 using v8::Local;
 using v8::Number;
 using v8::Object;
 
-// static
-EnvironmentData* EnvironmentData::GetCurrent() {
-  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
-  EnvironmentRegistry::NoExitScope scope(registry);
-
-  CHECK_NE(registry->begin(), registry->end());
-  return *registry->begin();
+namespace per_thread {
+thread_local EnvironmentData* environment_data = nullptr;
 }
 
 // static
 EnvironmentData* EnvironmentData::GetCurrent(v8::Isolate* isolate) {
-  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
-  EnvironmentRegistry::NoExitScope scope(registry);
-  return registry->Get(isolate);
+  CHECK_NE(per_thread::environment_data, nullptr);
+  CHECK_EQ(per_thread::environment_data->isolate(), isolate);
+  return per_thread::environment_data;
 }
 
 // static
 EnvironmentData* EnvironmentData::GetCurrent(
     const Nan::FunctionCallbackInfo<v8::Value>& info) {
   return EnvironmentData::GetCurrent(info.GetIsolate());
+}
+
+// static
+EnvironmentData* EnvironmentData::TryGetCurrent() {
+  return per_thread::environment_data;
 }
 
 // static
@@ -52,11 +53,12 @@ void EnvironmentData::Create(v8::Isolate* isolate) {
 }
 
 EnvironmentData::EnvironmentData(v8::Isolate* isolate, uv_loop_t* loop)
-    : isolate_(isolate), loop_(loop) {
+    : time_origin_(uv_hrtime()), isolate_(isolate), loop_(loop) {
   CHECK_EQ(0, uv_async_init(loop, &interrupt_async_, InterruptIdleCallback));
   uv_unref(reinterpret_cast<uv_handle_t*>(&interrupt_async_));
   CHECK_EQ(0, uv_async_init(loop, &statistics_async_, CollectStatistics));
   uv_unref(reinterpret_cast<uv_handle_t*>(&statistics_async_));
+  per_thread::environment_data = this;
 }
 
 // static
@@ -65,19 +67,35 @@ void EnvironmentData::AtExit(void* arg) {
   EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
   EnvironmentRegistry::NoExitScope scope(registry);
   std::unique_ptr<EnvironmentData> env_data = registry->Unregister(isolate);
+
+  for (auto callback : env_data->gc_epilogue_callbacks_) {
+    Nan::RemoveGCEpilogueCallback(callback);
+  }
+  env_data->gc_epilogue_callbacks_.clear();
+
+  for (auto callback : env_data->gc_prologue_callbacks_) {
+    Nan::RemoveGCPrologueCallback(callback);
+  }
+  env_data->gc_prologue_callbacks_.clear();
+
   uv_close(reinterpret_cast<uv_handle_t*>(&env_data->interrupt_async_),
-           nullptr);
+           CloseCallback<&EnvironmentData::interrupt_async_>);
   uv_close(reinterpret_cast<uv_handle_t*>(&env_data->statistics_async_),
-           CloseCallback);
+           CloseCallback<&EnvironmentData::statistics_async_>);
+  per_thread::environment_data = nullptr;
+  // Release the unique_ptr, but delete it in CloseCallback.
   env_data.release();
 }
 
 // static
+template <uv_async_t EnvironmentData::*field>
 void EnvironmentData::CloseCallback(uv_handle_t* handle) {
   EnvironmentData* env_data =
-      ContainerOf(&EnvironmentData::statistics_async_,
-                  reinterpret_cast<uv_async_t*>(handle));
-  delete env_data;
+      ContainerOf(field, reinterpret_cast<uv_async_t*>(handle));
+  env_data->closed_handle_count_++;
+  if (env_data->closed_handle_count_ == kHandleCount) {
+    delete env_data;
+  }
 }
 
 void EnvironmentData::SendCollectStatistics() {
@@ -91,6 +109,39 @@ void EnvironmentData::RequestInterrupt(InterruptCallback interrupt) {
   }
   isolate_->RequestInterrupt(InterruptBusyCallback, this);
   uv_async_send(&interrupt_async_);
+}
+
+void EnvironmentData::AddGCEpilogueCallback(Nan::GCEpilogueCallback callback,
+                                            v8::GCType gc_type_filter) {
+  gc_epilogue_callbacks_.push_back(callback);
+  CHECK_EQ(isolate_, Isolate::GetCurrent());
+  Nan::AddGCEpilogueCallback(callback, gc_type_filter);
+}
+
+void EnvironmentData::RemoveGCEpilogueCallback(
+    Nan::GCEpilogueCallback callback) {
+  gc_epilogue_callbacks_.remove(callback);
+  CHECK_EQ(isolate_, Isolate::GetCurrent());
+  Nan::RemoveGCEpilogueCallback(callback);
+}
+
+void EnvironmentData::AddGCPrologueCallback(Nan::GCPrologueCallback callback,
+                                            v8::GCType gc_type_filter) {
+  gc_prologue_callbacks_.push_back(callback);
+  CHECK_EQ(isolate_, Isolate::GetCurrent());
+  Nan::AddGCPrologueCallback(callback, gc_type_filter);
+}
+
+void EnvironmentData::RemoveGCPrologueCallback(
+    Nan::GCPrologueCallback callback) {
+  gc_prologue_callbacks_.remove(callback);
+  CHECK_EQ(isolate_, Isolate::GetCurrent());
+  Nan::RemoveGCPrologueCallback(callback);
+}
+
+uint64_t EnvironmentData::GetUptime() const {
+  uint64_t now = uv_hrtime();
+  return (now - time_origin_) / kNanosecondsPerSecond;
 }
 
 // static
@@ -131,7 +182,9 @@ void EnvironmentData::CollectStatistics(uv_async_t* handle) {
 }
 
 // javascript accessible
-void JsSetupEnvironmentData(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+// static
+void EnvironmentData::JsSetupEnvironmentData(
+    const Nan::FunctionCallbackInfo<v8::Value>& info) {
   Isolate* isolate = info.GetIsolate();
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
   HandleScope scope(isolate);
@@ -142,7 +195,13 @@ void JsSetupEnvironmentData(const Nan::FunctionCallbackInfo<v8::Value>& info) {
       data->Get(context, OneByteString(isolate, "threadId"))
           .ToLocalChecked()
           .As<Number>();
-  env_data->set_thread_id(thread_id->Value());
+  Local<Boolean> is_main_thread =
+      data->Get(context, OneByteString(isolate, "isMainThread"))
+          .ToLocalChecked()
+          .As<Boolean>();
+
+  env_data->thread_id_ = thread_id->Value();
+  env_data->is_main_thread_ = is_main_thread->Value();
 }
 
 }  // namespace xprofiler

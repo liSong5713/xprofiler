@@ -1,6 +1,8 @@
-#include "../../library/json.hpp"
-#include "../../library/utils.h"
+#include "commands/simple/config.h"
+
 #include "configure-inl.h"
+#include "library/json.hpp"
+#include "library/utils.h"
 
 namespace xprofiler {
 using nlohmann::json;
@@ -23,15 +25,19 @@ using std::exception;
 COMMAND_CALLBACK(GetXprofilerConfig) {
   json data;
   data["log_dir"] = GetLogDir();
+  data["uds_dir"] = GetUDSDir();
   data["log_interval"] = GetLogInterval();
   data["enable_log_uv_handles"] = GetEnableLogUvHandles();
   data["log_format_alinode"] = GetFormatAsAlinode();
   data["log_level"] = GetLogLevel();
   data["log_type"] = GetLogType();
-  data["enable_fatal_error_hook"] = GetEnableFatalErrorHook();
   data["patch_http"] = GetPatchHttp();
   data["patch_http_timeout"] = GetPatchHttpTimeout();
   data["check_throw"] = GetCheckThrow();
+  data["log_fragment"] = GetLogFragment();
+  data["enable_fatal_error_hook"] = GetEnableFatalErrorHook();
+  data["enable_fatal_error_report"] = GetEnableFatalErrorReport();
+  data["enable_fatal_error_coredump"] = GetEnableFatalErrorCoredump();
   success(data);
 }
 

@@ -27,6 +27,7 @@
                 "src/commands/parser.cc",
                 "src/commands/dump.cc",
                 "src/commands/simple/version.cc",
+                "src/commands/simple/registry.cc",
                 "src/commands/simple/config.cc",
                 "src/commands/cpuprofiler/cpu_profiler.cc",
                 "src/commands/cpuprofiler/cpu_profile.cc",
@@ -41,6 +42,7 @@
                 "src/commands/report/heap_statistics.cc",
                 "src/commands/report/uv_statistics.cc",
                 "src/commands/report/system_statistics.cc",
+                "src/commands/coredumper/coredumper.cc",
                 "src/hooks/set_hooks.cc",
                 "src/hooks/fatal_error.cc",
                 "src/util.cc",
@@ -52,7 +54,12 @@
             "cflags_cc!": ["-fno-exceptions"],
             "conditions": [
                 ["OS == 'linux'", {
-                    "cflags": ["-O2", "-std=c++14"],
+                    "cflags": [
+                        "-O2",
+                        "-std=c++14",
+                        "-Wno-sign-compare",
+                        "-Wno-cast-function-type",
+                    ],
                     "defines": [
                         'XPROFILER_IPC_PATH="<!(node -p \"require(\'./package.json\').xctlIpcPath.unix\")"',
                     ],
@@ -61,6 +68,11 @@
                         "src/platform/unix/utils.cc",
                         "src/platform/unix/ipc.cc",
                         "src/platform/unix/report.cc",
+                        "src/platform/unix/core/linux/dump.cc",
+                        "src/platform/unix/core/linux/coredumper.cc",
+                        "src/platform/unix/core/linux/elfcore.cc",
+                        "src/platform/unix/core/linux/linuxthreads.cc",
+                        "src/platform/unix/core/linux/thread_lister.cc"
                     ]
                 }],
                 ["OS == 'mac'", {
@@ -80,6 +92,7 @@
                         "src/platform/unix/utils.cc",
                         "src/platform/unix/ipc.cc",
                         "src/platform/unix/report.cc",
+                        "src/platform/unix/core/darwin.cc",
                     ]
                 }],
                 ["OS == 'win'", {
@@ -100,6 +113,7 @@
                         "src/platform/win/utils_win.cc",
                         "src/platform/win/ipc_win.cc",
                         "src/platform/win/report_win.cc",
+                        "src/platform/win/core_win.cc"
                     ]
                 }],
             ],

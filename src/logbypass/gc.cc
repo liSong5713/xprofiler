@@ -5,8 +5,6 @@
 #include "logger.h"
 
 namespace xprofiler {
-using Nan::AddGCEpilogueCallback;
-using Nan::AddGCPrologueCallback;
 using v8::GCType;
 using v8::Isolate;
 
@@ -33,9 +31,6 @@ uint32_t TotalGcDuration() {
 // gc prologue hook
 NAN_GC_CALLBACK(GCPrologueCallback) {
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
-  if (env_data == nullptr) {
-    return;
-  }
   GcStatistics* gc_statistics = env_data->gc_statistics();
   Mutex::ScopedLock lock(gc_statistics->mutex);
   gc_statistics->start = uv_hrtime();
@@ -44,9 +39,6 @@ NAN_GC_CALLBACK(GCPrologueCallback) {
 // gc epilogue hook
 NAN_GC_CALLBACK(GCEpilogueCallback) {
   EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
-  if (env_data == nullptr) {
-    return;
-  }
   GcStatistics* gc_statistics = env_data->gc_statistics();
   Mutex::ScopedLock lock(gc_statistics->mutex);
 
@@ -86,47 +78,37 @@ NAN_GC_CALLBACK(GCEpilogueCallback) {
   }
 }
 
-void InitGcStatusHooks() {
-  AddGCPrologueCallback(GCPrologueCallback);
-  AddGCEpilogueCallback(GCEpilogueCallback);
+void InitGcStatusHooks(EnvironmentData* env_data) {
+  env_data->AddGCPrologueCallback(GCPrologueCallback);
+  env_data->AddGCEpilogueCallback(GCEpilogueCallback);
 }
 
 void WriteGcStatusToLog(EnvironmentData* env_data, bool log_format_alinode) {
   GcStatistics* gc_statistics = env_data->gc_statistics();
   Mutex::ScopedLock lock(gc_statistics->mutex);
 
-  // record gc status
-  if (log_format_alinode)
-    Info("gc",
-         "gc_time_during_last_min: %lu, total: %lu, scavange_duration: %lu, "
-         "marksweep_duration: %lu",
-         gc_statistics->gc_time_during_last_record,
-         gc_statistics->total_gc_duration,
-         gc_statistics->scavange_duration_last_record,
-         gc_statistics->marksweep_duration_last_record);
-  else
-    Info("gc",
-         "uptime: %lu, "
-         "total_gc_times: %u, "
-         "total_gc_duration: %lu, "
-         "total_scavange_duration: %lu, "
-         "total_marksweep_duration: %lu, "
-         "total_incremental_marking_duration: %lu, "
-         "gc_time_during_last_record: %lu, "
-         "scavange_duration_last_record: %lu, "
-         "marksweep_duration_last_record: %lu, "
-         "incremental_marking_duration_last_record: %lu",
-         GetUptime(),  // uptime, s
-         // total
-         gc_statistics->total_gc_times, gc_statistics->total_gc_duration,
-         gc_statistics->total_scavange_duration,
-         gc_statistics->total_marksweep_duration,
-         gc_statistics->total_incremental_marking_duration,
-         // last record
-         gc_statistics->gc_time_during_last_record,
-         gc_statistics->scavange_duration_last_record,
-         gc_statistics->marksweep_duration_last_record,
-         gc_statistics->incremental_marking_duration_last_record);
+  InfoT("gc", env_data->thread_id(),
+        "uptime: %lu\t"
+        "total_gc_times: %lu\t"
+        "total_gc_duration: %lu\t"
+        "total_scavange_duration: %lu\t"
+        "total_marksweep_duration: %lu\t"
+        "total_incremental_marking_duration: %lu\t"
+        "gc_time_during_last_record: %lu\t"
+        "scavange_duration_last_record: %lu\t"
+        "marksweep_duration_last_record: %lu\t"
+        "incremental_marking_duration_last_record: %lu",
+        env_data->GetUptime(),  // uptime, s
+        // total
+        gc_statistics->total_gc_times, gc_statistics->total_gc_duration,
+        gc_statistics->total_scavange_duration,
+        gc_statistics->total_marksweep_duration,
+        gc_statistics->total_incremental_marking_duration,
+        // last record
+        gc_statistics->gc_time_during_last_record,
+        gc_statistics->scavange_duration_last_record,
+        gc_statistics->marksweep_duration_last_record,
+        gc_statistics->incremental_marking_duration_last_record);
   // reset last record
   gc_statistics->reset();
 }

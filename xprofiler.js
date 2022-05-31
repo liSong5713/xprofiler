@@ -2,11 +2,11 @@
 
 const path = require('path');
 const utils = require('./lib/utils');
-const clean = require('./lib/clean');
+const cleanUDS_FD = require('./lib/clean');
 const { patch } = require('./patch');
 const configure = require('./lib/configure');
 const configList = require('./xprofiler.json');
-const moment = require('moment');
+const dayjs = require('dayjs');
 const pkg = require('./package.json');
 const workerThreads = require('./lib/worker_threads');
 
@@ -22,7 +22,7 @@ xprofiler.setup({
 const runOnceStatus = {
   bypassLogThreadStarted: false,
   commandsListenerThreadStarted: false,
-  hooksSetted: false
+  hooksSetted: false,
 };
 
 let configured = false;
@@ -37,12 +37,13 @@ function checkNecessary() {
 function checkSocketPath(finalConfig) {
   const passed = xprofiler.checkSocketPath(true);
   if (!passed) {
-    const message = 'socket path is too long, complete log of this error can be found in:\n'
-      + `  ${path.join(finalConfig.log_dir, `xprofiler-error-${moment().format('YYYYMMDD')}.log`)}\n`;
+    const message =
+      'socket path is too long, complete log of this error can be found in:\n' +
+      `  ${path.join(finalConfig.log_dir, `xprofiler-error-${dayjs().format('YYYYMMDD')}.log`)}\n`;
     if (finalConfig.check_throw) {
       throw new Error(message);
     }
-    console.error(`\n[${moment().format('YYYY-MM-DD HH:mm:ss')}] [error] [xprofiler-ipc] [${pkg.version}] ${message}`);
+    console.error(`\n[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] [error] [xprofiler-ipc] [${pkg.version}] ${message}`);
     return;
   }
 
@@ -62,19 +63,23 @@ function start(config = {}) {
   // set config by user and env
   const finalConfig = exports.setConfig(config);
 
-  // check socket path
-  checkSocketPath(finalConfig);
+  const singleModuleMode = process.env.XPROFILER_UNIT_TEST_SINGLE_MODULE === 'YES';
 
-  // clean & set logdir info to file
-  const logdir = finalConfig.log_dir;
-  clean(logdir);
-  utils.setLogDirToFile(logdir);
+  if (workerThreads.isMainThread) {
+    // check socket path
+    checkSocketPath(finalConfig);
+    // clean uds fd & set logdir info to file
+    cleanUDS_FD(finalConfig.uds_dir);
+    utils.setLogDirToFile(finalConfig.log_dir);
+    if (!singleModuleMode) {
+      // start commands listener thread if needed
+      exports.runCommandsListener();
+    }
+  }
 
-  if (process.env.XPROFILER_UNIT_TEST_SINGLE_MODULE !== 'YES') {
-    // start performance log thread
+  if (!singleModuleMode) {
+    // start performance log thread if needed
     exports.runLogBypass();
-    // start commands listener thread
-    exports.runCommandsListener();
     // set hooks
     exports.setHooks();
   }
@@ -86,13 +91,14 @@ function start(config = {}) {
     addCloseRequest: xprofiler.addCloseRequest,
     addSentRequest: xprofiler.addSentRequest,
     addRequestTimeout: xprofiler.addRequestTimeout,
-    addHttpStatusCode: xprofiler.addHttpStatusCode
+    addHttpStatusCode: xprofiler.addHttpStatusCode,
   });
 }
 
 exports = module.exports = start;
 
 exports.start = start;
+
 
 exports.setConfig = function (config) {
   // set config
@@ -108,10 +114,13 @@ exports.getXprofilerConfig = function () {
   return xprofiler.getConfig();
 };
 
-['info', 'error', 'debug'].forEach(level => exports[level] = function (...args) {
-  checkNecessary();
-  xprofiler[level](...args);
-});
+['info', 'error', 'debug'].forEach(
+  (level) =>
+    (exports[level] = function (...args) {
+      checkNecessary();
+      xprofiler[level](...args);
+    }),
+);
 
 exports.runLogBypass = runOnce.bind(null, 'bypassLogThreadStarted', xprofiler.runLogBypass);
 

@@ -1,12 +1,15 @@
-#include "../library/error.h"
-#include "../library/json.hpp"
-#include "../library/utils.h"
-#include "../logger.h"
-#include "../platform/platform.h"
-#include "./dump.h"
-#include "./send.h"
-#include "./simple/config.h"
-#include "./simple/version.h"
+#include "commands/parser.h"
+
+#include "commands/dump.h"
+#include "commands/send.h"
+#include "commands/simple/config.h"
+#include "commands/simple/registry.h"
+#include "commands/simple/version.h"
+#include "library/error.h"
+#include "library/json.hpp"
+#include "library/utils.h"
+#include "logger.h"
+#include "platform/platform.h"
 
 namespace xprofiler {
 using nlohmann::json;
@@ -19,8 +22,7 @@ using std::string;
         parsed, FmtMessage,                                           \
         [traceid](json data) { SuccessValue(traceid, data); },        \
         [traceid](string message) { ErrorValue(traceid, message); }); \
-    handled = true;                                                   \
-  }
+  } else
 
 void ParseCmd(char* command) {
   Debug("parser", "received command: %s", command);
@@ -32,12 +34,13 @@ void ParseCmd(char* command) {
     return;
   }
 
-  // handle cmd
-  bool handled = false;
-  string cmd = parsed["cmd"];
-
-  // get traceid
   XpfError err;
+  string cmd = GetJsonValue<string>(parsed, "cmd", err);
+  if (err.Fail()) {
+    ErrorValue("unknown",
+               FmtMessage("cmd shoule be passed in: %s", err.GetErrMessage()));
+    return;
+  }
   string traceid = GetJsonValue<string>(parsed, "traceid", err);
   if (err.Fail()) {
     ErrorValue("unknown", FmtMessage("traceid shoule be passed in: %s",
@@ -47,6 +50,9 @@ void ParseCmd(char* command) {
 
   // get version
   HANDLE_COMMANDS(check_version, GetXprofilerVersion)
+
+  // list environments
+  HANDLE_COMMANDS(list_environments, ListEnvironments)
 
   // get/set config
   HANDLE_COMMANDS(get_config, GetXprofilerConfig)
@@ -70,8 +76,11 @@ void ParseCmd(char* command) {
   // node report
   HANDLE_COMMANDS(diag_report, GetNodeReport)
 
+  // generator
+  HANDLE_COMMANDS(generate_coredump, GenerateCoredump)
+
   // not match any commands
-  if (!handled) {
+  /* else */ {
     ErrorValue(traceid, FmtMessage("not support command: %s", cmd.c_str()));
   }
 }

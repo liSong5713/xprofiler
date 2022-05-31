@@ -1,13 +1,16 @@
 #include "dump.h"
 
 #include "configure-inl.h"
+#include "coredumper/coredumper.h"
 #include "cpuprofiler/cpu_profiler.h"
 #include "environment_data.h"
 #include "gcprofiler/gc_profiler.h"
 #include "heapdump/heap_profiler.h"
 #include "heapprofiler/sampling_heap_profiler.h"
+#include "library/utils.h"
 #include "logger.h"
 #include "platform/platform.h"
+#include "process_data.h"
 #include "report/node_report.h"
 #include "uv.h"
 #include "v8.h"
@@ -48,6 +51,7 @@ std::string sampling_heapprofile_filepath = "";
 std::string heapsnapshot_filepath = "";
 std::string gcprofile_filepath = "";
 std::string node_report_filepath = "";
+std::string coredump_filepath = "";
 
 string Action2String(DumpAction action) {
   string name = "";
@@ -75,6 +79,9 @@ string Action2String(DumpAction action) {
       break;
     case NODE_REPORT:
       name = "node_report";
+      break;
+    case COREDUMP:
+      name = "coredump";
       break;
     default:
       name = "unknown";
@@ -125,9 +132,11 @@ void TransactionDone(string thread_name, string unique_key, XpfError& err) {
 
 template <typename T>
 T* GetProfilingData(void* data, string notify_type, string unique_key) {
+  Isolate* isolate = Isolate::GetCurrent();
+  EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
   T* dump_data = static_cast<T*>(data);
-  Debug(module_type, "<%s> %s action start.", notify_type.c_str(),
-        unique_key.c_str());
+  DebugT(module_type, env_data->thread_id(), "<%s> %s action start.",
+         notify_type.c_str(), unique_key.c_str());
   return dump_data;
 }
 
@@ -139,37 +148,40 @@ T* GetDumpData(void* data) {
 }
 
 void AfterDumpFile(string& filepath, string notify_type, string unique_key) {
-  Debug(module_type, "<%s> %s dump file: %s.", notify_type.c_str(),
-        unique_key.c_str(), filepath.c_str());
+  Isolate* isolate = Isolate::GetCurrent();
+  EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
+  DebugT(module_type, env_data->thread_id(), "<%s> %s dump file: %s.",
+         notify_type.c_str(), unique_key.c_str(), filepath.c_str());
   filepath = "";
 }
 
 }  // namespace
 
-#define CHECK_ERR(func)                                          \
-  func;                                                          \
-  if (err.Fail()) {                                              \
-    Debug(module_type, "<%s> %s error: %s", notify_type.c_str(), \
-          unique_key.c_str(), err.GetErrMessage());              \
-    return;                                                      \
+#define CHECK_ERR(func)                                                   \
+  func;                                                                   \
+  if (err.Fail()) {                                                       \
+    DebugT(module_type, env_data->thread_id(), "<%s> %s error: %s",       \
+           notify_type.c_str(), unique_key.c_str(), err.GetErrMessage()); \
+    return;                                                               \
   }
 
 void HandleAction(v8::Isolate* isolate, void* data, string notify_type) {
   BaseDumpData* dump_data = static_cast<BaseDumpData*>(data);
   string traceid = dump_data->traceid;
   DumpAction action = dump_data->action;
+  EnvironmentData* env_data = EnvironmentData::GetCurrent(isolate);
 
   // check transaction has been done
   XpfError err;
   string unique_key = traceid + "::" + Action2String(action);
   TransactionDone(notify_type, unique_key, err);
   if (err.Fail()) {
-    Debug(module_type, "%s", err.GetErrMessage());
+    DebugT(module_type, env_data->thread_id(), "%s", err.GetErrMessage());
     request_map.erase(unique_key);
     // clear dump_data
     if (dump_data->run_once) {
-      Debug(module_type, "<%s> %s dump_data cleared.", notify_type.c_str(),
-            unique_key.c_str());
+      DebugT(module_type, env_data->thread_id(), "<%s> %s dump_data cleared.",
+             notify_type.c_str(), unique_key.c_str());
       delete dump_data;
     }
     return;
@@ -177,8 +189,8 @@ void HandleAction(v8::Isolate* isolate, void* data, string notify_type) {
 
   // set action executing flag
   request_map.insert(make_pair(unique_key, true));
-  Debug(module_type, "<%s> %s handled.", notify_type.c_str(),
-        unique_key.c_str());
+  DebugT(module_type, env_data->thread_id(), "<%s> %s handled.",
+         notify_type.c_str(), unique_key.c_str());
 
   // check conflict action running
   CHECK_ERR(ConflictActionRunning(action, err))
@@ -237,15 +249,22 @@ void HandleAction(v8::Isolate* isolate, void* data, string notify_type) {
       action_map.erase(NODE_REPORT);
       break;
     }
+    case COREDUMP: {
+      Coredumper::WriteCoredump(coredump_filepath);
+      AfterDumpFile(coredump_filepath, notify_type, unique_key);
+      action_map.erase(COREDUMP);
+      break;
+    }
     default:
-      Error(module_type, "not support dump action: %d", action);
+      ErrorT(module_type, env_data->thread_id(), "not support dump action: %d",
+             action);
       break;
   }
 }
 
 #undef CHECK_ERR
 
-static void ProfilingTime(uint64_t profiling_time) {
+static void WaitForProfile(uint64_t profiling_time) {
   uint64_t start = uv_hrtime();
   while (uv_hrtime() - start < profiling_time * 10e5) {
     // release cpu
@@ -253,7 +272,7 @@ static void ProfilingTime(uint64_t profiling_time) {
   }
 }
 
-static void NotifyMainJsThread(EnvironmentData* env_data, void* data) {
+static void NotifyJsThread(EnvironmentData* env_data, void* data) {
   env_data->RequestInterrupt(
       [data](EnvironmentData* env_data, InterruptKind kind) {
         HandleAction(env_data->isolate(), data,
@@ -262,31 +281,38 @@ static void NotifyMainJsThread(EnvironmentData* env_data, void* data) {
       });
 }
 
-template <typename T>
-void StopProfiling(EnvironmentData* env_data, void* data,
-                   DumpAction stop_action) {
-  T* dump_data = static_cast<T*>(data);
-  ProfilingTime(dump_data->profiling_time);
+template <typename T, DumpAction stop_action>
+void StopProfiling(T* dump_data) {
+  WaitForProfile(dump_data->profiling_time);
   dump_data->action = stop_action;
-  NotifyMainJsThread(env_data, data);
+
+  ThreadId thread_id = dump_data->thread_id;
+  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
+  EnvironmentRegistry::NoExitScope scope(registry);
+  EnvironmentData* env_data = registry->Get(thread_id);
+  if (env_data == nullptr) {
+    return;
+  }
+  NotifyJsThread(env_data, dump_data);
 }
 
 static void ProfilingWatchDog(void* data) {
-  // TODO(legendecas): environment data selector
-  EnvironmentData* env_data = EnvironmentData::GetCurrent();
   BaseDumpData* dump_data = static_cast<BaseDumpData*>(data);
   string traceid = dump_data->traceid;
   DumpAction action = dump_data->action;
+
   switch (action) {
     case START_CPU_PROFILING:
-      StopProfiling<CpuProfilerDumpData>(env_data, data, STOP_CPU_PROFILING);
+      StopProfiling<CpuProfilerDumpData, STOP_CPU_PROFILING>(
+          static_cast<CpuProfilerDumpData*>(dump_data));
       break;
     case START_SAMPLING_HEAP_PROFILING:
-      StopProfiling<SamplingHeapProfilerDumpData>(env_data, data,
-                                                  STOP_SAMPLING_HEAP_PROFILING);
+      StopProfiling<SamplingHeapProfilerDumpData, STOP_SAMPLING_HEAP_PROFILING>(
+          static_cast<SamplingHeapProfilerDumpData*>(dump_data));
       break;
     case START_GC_PROFILING:
-      StopProfiling<GcProfilerDumpData>(env_data, data, STOP_GC_PROFILING);
+      StopProfiling<GcProfilerDumpData, STOP_GC_PROFILING>(
+          static_cast<GcProfilerDumpData*>(dump_data));
       break;
     default:
       Error(module_type, "watch dog not support dump action: %s", action);
@@ -295,7 +321,7 @@ static void ProfilingWatchDog(void* data) {
 }
 
 static string CreateFilepath(string prefix, string ext) {
-  return GetLogDir() + GetSep() + "x-" + prefix + "-" + to_string(GetPid()) +
+  return GetUDSDir() + GetSep() + "x-" + prefix + "-" + to_string(GetPid()) +
          "-" + ConvertTime("%Y%m%d") + "-" + to_string(GetNextDiagFileId()) +
          "." + ext;
 }
@@ -311,6 +337,8 @@ static json DoDumpAction(json command, DumpAction action, string prefix,
 
   // get traceid
   CHECK_ERR(string traceid = GetJsonValue<string>(command, "traceid", err))
+  CHECK_ERR(ThreadId thread_id =
+                GetJsonValue<ThreadId>(command, "thread_id", err))
 
   // check action running
   CHECK_ERR(ActionRunning(action, err))
@@ -324,8 +352,13 @@ static json DoDumpAction(json command, DumpAction action, string prefix,
   // set action running flag
   action_map.insert(make_pair(action, true));
 
-  // TODO(legendecas): environment data selector
-  EnvironmentData* env_data = EnvironmentData::GetCurrent();
+  EnvironmentRegistry* registry = ProcessData::Get()->environment_registry();
+  EnvironmentRegistry::NoExitScope scope(registry);
+  EnvironmentData* env_data = registry->Get(thread_id);
+  if (env_data == nullptr) {
+    err = XpfError::Failure("Thread not found: %f", thread_id);
+    return result;
+  }
 
   // get file name
   switch (action) {
@@ -358,16 +391,28 @@ static json DoDumpAction(json command, DumpAction action, string prefix,
       node_report_filepath = CreateFilepath(prefix, ext);
       result["filepath"] = node_report_filepath;
       break;
+    case COREDUMP:
+#ifdef __linux__
+      coredump_filepath = CreateFilepath(prefix, ext);
+      result["filepath"] = coredump_filepath;
+#else
+      err = XpfError::Failure("generate_coredump only support linux now.");
+      action_map.erase(COREDUMP);
+#endif
+      break;
     default:
       break;
   }
 
+  if (err.Fail()) return result;
+
   // set action callback data
   data->traceid = traceid;
+  data->thread_id = thread_id;
   data->action = action;
 
   // send data
-  NotifyMainJsThread(env_data, data);
+  NotifyJsThread(env_data, data);
 
   if (!profiling) return result;
 
@@ -423,6 +468,9 @@ V(Heapdump, HeapdumpDumpData, HEAPDUMP, false, heapdump, heapsnapshot)
 
 // dynamic report
 V(GetNodeReport, NodeReportDumpData, NODE_REPORT, false, diagreport, diag)
+
+// generate coredump
+V(GenerateCoredump, CoreDumpData, COREDUMP, false, coredump, core)
 
 #undef V
 
