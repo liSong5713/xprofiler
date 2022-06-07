@@ -11,10 +11,10 @@
     "module_path": "./build/binding/{configuration}/{node_abi}-{platform}-{arch}/",
     "remote_path": "./v{version}/",
     "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
-    "host": "https://github.com/X-Profiler/xprofiler/releases/download"
+    "host": "https://github.com/liSong5713/xprofiler/releases/download"
   },
   "scripts": {
-    "install": "node-pre-gyp rebuild",
+    "install": "node-pre-gyp install --fallback-to-build",
     "package": "node scripts/build.js",
     "pack-common": "node scripts/common.js",
     "pack-7u": "node scripts/7u.js",
