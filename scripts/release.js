@@ -9,7 +9,7 @@ console.log(`will release xprofiler@${releaseVersion}...\n`);
 
 function run(cmd) {
   console.log(`Run: ${cmd}`);
-  const options = { cwd: path.join(__dirname, '..'), maxBuffer: 4 * 1024 * 1024, stdio: 'inherit' };
+  const options = { cwd: path.join(__dirname, '..'), maxBuffer: 48 * 1024 * 1024, stdio: 'inherit' };
   cp.execSync(cmd, options);
 }
 
@@ -25,6 +25,6 @@ run(`npm publish --registry=${E_NPM_REGISTRY}`);
 run(`npm run docker:build:linux-x64`);
 
 // build darwin-x64
-run(`npm run build & npm run pack & npm run upload`);
+run(`npm run build && npm run pack && npm run upload`);
 
 console.log(`\nrelease xprofiler@${releaseVersion} done.`);
