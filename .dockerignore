@@ -1,0 +1,8 @@
+node_modules
+.git
+.vscode
+.github
+.xprofiler
+logs
+build
+test
