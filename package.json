@@ -33,6 +33,7 @@
     "dep": "npm run build && npm run cov",
     "release": "node scripts/release.js",
     "autod": "autod",
+    "docker:build:linux-x64":"docker build -t xprofiler:v1 .",
     "pack": "node scripts/clean.js && node-pre-gyp package && node-pre-gyp testpackage && npm run copy"
   },
   "repository": {

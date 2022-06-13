@@ -3,7 +3,7 @@
 const cp = require('child_process');
 const path = require('path');
 const pack = require('../package.json');
-
+const E_NPM_REGISTRY = 'http://nexus.17usoft.com/repository/npm-fe/';
 const releaseVersion = pack.version;
 console.log(`will release xprofiler@${releaseVersion}...\n`);
 
@@ -20,6 +20,11 @@ run(`git tag ${tagName}`);
 run(`git push -f origin ${tagName}`);
 
 // publish to npm
-run(`npm publish --registry=https://registry.npmjs.org`);
+run(`npm publish --registry=${E_NPM_REGISTRY}`);
+// build linux-x64
+run(`npm run docker:build:linux-x64`);
+
+// build darwin-x64
+run(`npm run build & npm run pack & npm run upload`);
 
 console.log(`\nrelease xprofiler@${releaseVersion} done.`);
