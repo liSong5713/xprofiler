@@ -89,24 +89,15 @@ void WriteHttpStatus(EnvironmentData* env_data, bool log_format_alinode,
   if (http_statistics->http_response_sent != 0) {
     rt = http_statistics->http_rt * 1.00 / http_statistics->http_response_sent;
   }
-  std::string format = "";
-    for (int i = 0; i < 1000; i++) {
-      uint32_t count = http_statistics->status_codes[i];
-      if (count > 0 && format.length() < 1536) {
-        format += "res" XPROFILER_BLURRY_TAG + std::to_string(i) + ": " +
-                  std::to_string(count) + ", ";
-      }
-    }
 
   Info("http",
-         "%s"
          "live_http_request: %d\t"
          "http_response_close: %d\t"
          "http_response_sent: %d\t"
          "http_request_timeout: %d\t"
          "http_patch_timeout: %d\t"
          "http_rt: %.2lf",
-         format.c_str(), http_statistics->live_http_request,
+         http_statistics->live_http_request,
          http_statistics->http_response_close,
          http_statistics->http_response_sent,
          http_statistics->http_request_timeout, http_patch_timeout, rt);
