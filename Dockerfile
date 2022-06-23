@@ -2,7 +2,7 @@ FROM node:12
 
 COPY . /app
 WORKDIR /app
-RUN npm install --registry=https://registry.npm.taobao.org
+RUN npm install --registry=https://npmmirror.com
 # node-gyp build c++ addon
 RUN npm run build
 
