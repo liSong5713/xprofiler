@@ -2,7 +2,9 @@ FROM node:12
 
 COPY . /app
 WORKDIR /app
-RUN npm install --registry=https://npmmirror.com/mirrors/
+#国内的npmmirror镜像过慢
+#RUN npm install --registry=https://registry.npmmirror.com
+RUN npm install
 # node-gyp build c++ addon
 RUN npm run build
 
