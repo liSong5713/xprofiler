@@ -1,6 +1,6 @@
 {
   "name": "@te-one/xprofiler",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "node.js addon to output runtime logs",
   "bin": {
     "xprofctl": "bin/xprofctl"
