@@ -13,6 +13,7 @@ export interface XprofilerConfig {
   enable_fatal_error_hook?: boolean;
   enable_fatal_error_report?: boolean;
   enable_fatal_error_coredump?: boolean;
+  intercept_http_req?: Function;
 }
 
 /**
