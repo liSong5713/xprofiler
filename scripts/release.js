@@ -21,10 +21,11 @@ run(`git push -f origin ${tagName}`);
 
 // publish to npm
 run(`npm publish --registry=${E_NPM_REGISTRY}`);
-// build linux-x64
-run(`docker build -t xprofiler:${tagName} .`);
 
 // build darwin-x64
 run(`npm run build && npm run pack && npm run upload`);
+
+// build linux-x64
+run(`docker build -t xprofiler:${tagName} .`);
 
 console.log(`\nrelease xprofiler@${releaseVersion} done.`);
