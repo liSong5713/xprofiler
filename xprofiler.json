@@ -30,12 +30,6 @@
     "format": "boolean"
   },
   {
-    "name": "log_format_alinode",
-    "env": "XPROFILER_LOG_FORMAT_ALINODE",
-    "rules": ["boolean"],
-    "format": "boolean"
-  },
-  {
     "name": "log_level",
     "env": "XPROFILER_LOG_LEVEL",
     "rules": ["number"],
@@ -54,6 +48,11 @@
     "format": "boolean"
   },
   {
+    "name": "intercept_http_req",
+    "rules": ["function"],
+    "format": "function"
+  },
+  {
     "name": "patch_http_timeout",
     "env": "XPROFILER_PATCH_HTTP_TIMEOUT",
     "rules": ["number"],
@@ -68,25 +67,19 @@
   {
     "name": "enable_fatal_error_hook",
     "env": "XPROFILER_ENABLE_FATAL_ERROR_HOOK",
-    "rules": [
-      "boolean"
-    ],
+    "rules": ["boolean"],
     "format": "boolean"
   },
   {
     "name": "enable_fatal_error_report",
     "env": "XPROFILER_ENABLE_FATAL_ERROR_REPORT",
-    "rules": [
-      "boolean"
-    ],
+    "rules": ["boolean"],
     "format": "boolean"
   },
   {
     "name": "enable_fatal_error_coredump",
     "env": "XPROFILER_ENABLE_FATAL_ERROR_COREDUMP",
-    "rules": [
-      "boolean"
-    ],
+    "rules": ["boolean"],
     "format": "boolean"
   }
 ]

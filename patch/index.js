@@ -4,7 +4,12 @@ const { patchHttp } = require('./http');
 
 function patch(config, methods) {
   if (config.patch_http) {
-    patchHttp({ ...methods, patch_http_timeout: config.patch_http_timeout });
+    const { patch_http_timeout, intercept_http_req } = config;
+    patchHttp({
+      ...methods,
+      patch_http_timeout,
+      intercept_http_req,
+    });
   }
 }
 

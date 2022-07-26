@@ -99,7 +99,6 @@ exports = module.exports = start;
 
 exports.start = start;
 
-
 exports.setConfig = function (config) {
   // set config
   const finalConfig = configure(configList, config);

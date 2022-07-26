@@ -5,10 +5,21 @@ const http = require('http');
 const https = require('https');
 
 function requestListenerWrapper(original, methods) {
+  const {
+    addLiveRequest,
+    addCloseRequest,
+    addSentRequest,
+    addRequestTimeout,
+    addHttpStatusCode,
+    patch_http_timeout,
+    intercept_http_req,
+  } = methods;
+  const isIntercepted = typeof intercept_http_req === 'function';
   return function (req, res) {
-    const { addLiveRequest, addCloseRequest, addSentRequest,
-      addRequestTimeout, addHttpStatusCode, patch_http_timeout } = methods;
-
+    if (isIntercepted && intercept_http_req(req, res) === 'IGNORE_LOG') {
+      // call origin function
+      return original.apply(this, arguments);
+    }
     addLiveRequest();
 
     const timer = setTimeout(() => {
@@ -30,8 +41,7 @@ function requestListenerWrapper(original, methods) {
     });
 
     // call origin function
-    const returned = original.apply(this, arguments);
-    return returned;
+    return original.apply(this, arguments);
   };
 }
 
